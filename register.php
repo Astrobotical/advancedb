@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signup Page</title>
+    <title>Signup Page 1</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,6 +14,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            padding:15%;
         }
 
         .login-container {
@@ -23,6 +24,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 400px;
+            margin-top:15%;
         }
 
         h2 {
@@ -131,6 +133,7 @@
     </style>
 </head>
 <body>
+<? include 'navbar.php';?>
     <div class="login-container">
         <div id="loginForm">
             <h2>Sign Up</h2>
@@ -151,7 +154,7 @@
             </div>
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" >
+                <input type="email" id="email" name="email" onkeyup="checkIfEmailPresent(this.value)" >
                 <p id="Eerror" class="error"></p>
             </div>
             <div class="form-group">
@@ -192,8 +195,61 @@
             passwordElement.style.display = 'none';
         }
     }
+    const checkIfEmailPresent = (email)=>{
+        const emailError = document.getElementById("Eerror");
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (email.length === 0) {
+            emailError.innerHTML = "";
+        return;
+    }
+    if(emailRegex.test(email) == false)
+    {
+        emailError.innerHTML = "This must be a valid email";
+    }else{
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "processSignup.php?email=" + encodeURIComponent(email), true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            if(xhr.responseText == "Yes"){
+                emailError.innerHTML = "This email is available";
+                emailError.style.display = 'block';
+                emailError.style.color = 'green';
+            }else{
+                emailError.innerHTML = "This email is not available";
+                emailError.style.display = 'block';
+                emailError.style.color = 'red';
+            }
+            
+        }
+    };
+    xhr.send();
+    }
+}
     const checkUsernameExists = (username)=>{
+        const usernameError = document.getElementById("Uerror");
+        if (username.length === 0) {
+            usernameError.innerHTML = "";
+        return;
+    }
 
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "processSignup.php?username=" + encodeURIComponent(username), true);
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            if(xhr.responseText == "Yes"){
+                usernameError.innerHTML = "This Username is available";
+                usernameError.style.display = 'block';
+                usernameError.style.color = 'green';
+            }else{
+                usernameError.innerHTML = "This Username is not available";
+                usernameError.style.display = 'block';
+                usernameError.style.color = 'red';
+            }
+            
+        }
+    };
+    xhr.send();
     } 
 
     const processData = async ()=>{
@@ -222,7 +278,6 @@
         passwordErrorElement.style.display = 'block';
         return;
     }
-    
     errorElement.style.display = 'none';
     passwordErrorElement.style.display = 'none';
     usernameErrorElement.style.display = 'none';
@@ -232,10 +287,11 @@
             loadingOverlay.style.display = 'none';
             responseMessage.style.display = 'block';
         }, 2000); 
-        const response = await fetch('processLogin.php', {
+        let formData = {"username":username,"firstName":firstName,"lastName":lastName,"password":password,"address":address.value,"DOB":dob.value};
+        const response = await fetch('processSignup.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, rememberMe }),
+            body: JSON.stringify(formData),
         });
         const data = await response.json();
         if (response.ok) {
