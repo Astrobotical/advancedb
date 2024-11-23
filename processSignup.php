@@ -1,6 +1,8 @@
 <?php
 require('./data/connection.php');
 $connectionString = new ConnectionString();
+
+
 if (isset($_GET['username'])) {
     $username = $_GET['username'];
 
@@ -52,37 +54,46 @@ if (isset($_GET['username'])) {
     
         sqlsrv_close($connectionString->connection);
         }
-if(isset($_POST['password'])){
-    $firstName = trim($_POST['firstName']);
-    $lastName = trim($_POST['lastName']);
-    $email = trim($_POST['email']);
-    $address = trim($_POST['address']);
-    $dob = trim($_POST['DOB']);
-    $password = trim($_POST['password']);
-    echo "Something here";
-    // 1  for admin and 2 for customer
-    $roleID = 1; 
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-    sqlsrv_begin_transaction($connectionString->connection);
+    
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+    $requestBody = json_decode(file_get_contents('php://input'), true);
 
-    try {
-        $query = "INSERT INTO Users (firstName, lastName, address, DOB, RoleID, Password, email) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?)";
-        $params = [$firstName, $lastName, $address, $dob, $roleID, $hashedPassword, $email];
+    if (isset($requestBody['password'])) {
+        $firstName = trim($requestBody['firstName']);
+        $lastName = trim($requestBody['lastName']);
+        $email = trim($requestBody['email']);
+        $address = trim($requestBody['address']);
+        $dob = trim($requestBody['DOB']);
+        $password = trim($requestBody['password']);
+        $username = trim($requestBody['username']);
+        
+        $roleID = 2;
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = sqlsrv_query($connectionString->connection, $query, $params);
+        sqlsrv_begin_transaction($connectionString->connection);
 
-        if ($stmt === false) {
-            throw new Exception("Failed to insert user.");
+        try {
+          $query = "INSERT INTO Users (username, firstName, lastName, address, DOB, RoleID, Password, email) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+          $params = [$username, $firstName, $lastName, $address, $dob, $roleID, $hashedPassword, $email];
+
+            $stmt = sqlsrv_query($connectionString->connection, $query, $params);
+
+
+            sqlsrv_commit($connectionString->connection);
+            sqlsrv_free_stmt($stmt);
+            http_response_code(201);
+            echo json_encode(["status" => "success", "message" => "User registered successfully."]);
+        } catch (Exception $e) {
+            sqlsrv_rollback($connectionString->connection);
+            http_response_code(500);
+            echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+        } finally {
+            sqlsrv_close($connectionString->connection);
         }
-
-        sqlsrv_commit($connectionString->connection);
-        sqlsrv_free_stmt($stmt);
-        return ["status" => "success", "message" => "User registered successfully."];
-    } catch (Exception $e) {
-        sqlsrv_rollback($connectionString->connection);
-        return ["status" => "error", "message" => $e->getMessage()];
-    } finally {
-        sqlsrv_close($connectionString->connection);
+    } else {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "Invalid payload."]);
     }
 }
