@@ -3,50 +3,68 @@
 require('./data/connection.php');
 $connectionString = new ConnectionString();
 
-$data = json_decode(file_get_contents('php://input'), true);
+try {
+    if (!isset($_POST['username']) || !isset($_POST['password'])) {
+        throw new Exception("Username and password are required.");
+    }
 
-$username = $data['username'] ?? '';
-$password = $data['password'] ?? '';
-$rememberMe = $data['rememberMe'] ?? false;
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+    $rememberMe = isset($_POST['rememberMe']) ? true : false;
 
-   // Begin transaction
-   sqlsrv_begin_transaction($connectionString->connection);
+    sqlsrv_begin_transaction($connectionString->connection);
 
-   try {
-       $query = "SELECT username, Password FROM Users WHERE username = ? OR email = ?";
-       $params = [$username, $username];
-       $stmt = sqlsrv_query($connectionString->connection, $query, $params);
+    $query = "SELECT * FROM Users WHERE username = ?";
+    $params = array($username);
+    $stmt = sqlsrv_query($connectionString->connection, $query, $params);
 
-       if ($stmt === false) {
-           throw new Exception("Error fetching user data.");
-       }
+    if ($stmt === false) {
+        throw new Exception("Error fetching user data.");
+    }
 
-       $user = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
+    $user = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
 
-       if (!$user) {
-           sqlsrv_rollback($connectionString->connection); 
-           return ["status" => "error", "message" => "Invalid username or password."];
-       }
+    if (!$user) {
+        sqlsrv_rollback($connectionString->connection); 
+        http_response_code(401);
+        echo json_encode(["status" => "error", "message" => "User does not exists "]);
+        exit;
+    }
 
-       if (!password_verify($password, $user['Password'])) {
-           sqlsrv_rollback($connectionString->connection); 
-           return ["status" => "error", "message" => "Invalid username or password."];
-       }
-       sqlsrv_commit($connectionString->connection);
-       http_response_code(200); 
-       $_SESSION['username'] = $user['username'];
-       return [
-           "status" => "success",
-           "message" => "Login successful.",
-           "user" => [
-               "username" => $user['username']
-           ]
-       ];
-   } catch (Exception $e) {
+    if (!password_verify($password, $user['Password'])) {
+        sqlsrv_rollback($connectionString->connection); 
+        http_response_code(401);
+        echo json_encode(["status" => "error", "message" => "Password is invalid."]);
+        exit;
+    }
+
+    sqlsrv_commit($connectionString->connection);
+
+    $_SESSION['username'] = $user['username'];
+
+    if ($rememberMe) {
+        setcookie('username', $user['username'], time() + (30 * 24 * 60 * 60), '/');
+        setcookie('rememberMe', true, time() + (30 * 24 * 60 * 60), '/');
+    }
+
+    http_response_code(200); 
+
+    echo json_encode([
+        "status" => "success",
+        "message" => "Login successful.",
+        "user" => [
+            "username" => $user['username']
+        ]
+    ]);
+    
+} catch (Exception $e) {
     http_response_code(401);
-       sqlsrv_rollback($connectionString->connection); 
-       return ["status" => "error", "message" => $e->getMessage()];
-   } finally {
-       sqlsrv_close($connectionString->connection); 
-   }
+    sqlsrv_rollback($connectionString->connection); 
+    echo json_encode([
+        "status" => "error",
+        "message" => $e->getMessage()
+    ]);
+} finally {
+    sqlsrv_close($connectionString->connection); 
+}
 ?>

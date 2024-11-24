@@ -4,89 +4,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signup Page 1</title>
+    <title>Registration Page</title>
+    <link rel="stylesheet" href="navbar.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding:15%;
-        }
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;  /* Align the content from the top */
+    min-height: 100vh;        /* Make sure the body fills the viewport */
+    margin: 0;
+    padding-top: 60px;        /* Space for the navbar */
+}
 
-        .login-container {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            margin-top:15%;
-        }
+.login-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    margin-top: 20px;         /* Space between navbar and form */
+}
 
-        h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
+h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
 
-        .form-group {
-            margin-bottom: 15px;
-        }
+.form-group {
+    margin-bottom: 15px;
+}
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
 
-        input[type="text"],
-        input[type="password"],
-        input[type="date"],
-        input[type="email"]
-        {
-            width: 95%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-        }
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="email"] {
+    width: 100%;  /* Make inputs take full width */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
 
-        .checkbox {
-            display: flex;
-            align-items: center;
-        }
+.checkbox {
+    display: flex;
+    align-items: center;
+}
 
-        input[type="checkbox"] {
-            margin-right: 10px;
-        }
+input[type="checkbox"] {
+    margin-right: 10px;
+}
 
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #4caf50;
-            border: none;
-            color: white;
-            font-size: 16px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4caf50;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
 
-        button:hover {
-            background-color: #45a049;
-        }
+button:hover {
+    background-color: #45a049;
+}
 
-        .error {
-            color: red;
-            font-size: 14px;
-            margin-top: 10px;
-            display: none;
-        }
-        .loading-overlay {
-    display: none; 
+.error {
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+    display: none;
+}
+
+.loading-overlay {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -104,7 +106,7 @@
     border-radius: 50%;
     width: 50px;
     height: 50px;
-    animation: spin 10s linear infinite;
+    animation: spin 1s linear infinite;  /* Faster rotation */
 }
 
 @keyframes spin {
@@ -115,6 +117,7 @@
         transform: rotate(360deg);
     }
 }
+
 .response-message {
     margin-top: 20px;
     font-size: 16px;
@@ -129,11 +132,11 @@
 .response-message.error {
     color: red;
 }
-
     </style>
+
 </head>
 <body>
-<? include 'navbar.php';?>
+<?php include 'navbar.php';?>
     <div class="login-container">
         <div id="loginForm">
             <h2>Sign Up</h2>
@@ -287,7 +290,7 @@
             loadingOverlay.style.display = 'none';
             responseMessage.style.display = 'block';
         }, 2000); 
-        let formData = {"username":username,"firstName":firstName,"lastName":lastName,"password":password,"address":address.value,"DOB":dob.value};
+        let formData = {"username":username,"firstName":firstName,"email":email,"lastName":lastName,"password":password,"address":address.value,"DOB":dob.value};
         const response = await fetch('processSignup.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -295,13 +298,16 @@
         });
         const data = await response.json();
         if (response.ok) {
-            responseMessage.textContent = data.message || 'Authentication successful!';
             responseMessage.classList.add('success');
             responseMessage.classList.remove('error');
-        } else {
-            responseMessage.textContent = data.message || 'Authentication failed.';
+            responseMessage.textContent = data.message || 'Authentication successful!';
+            window.location.href = 'index.php'; 
+          
+        } else if(response.status ==  500) {
             responseMessage.classList.add('error');
             responseMessage.classList.remove('success');
+            responseMessage.textContent = data.message || 'Authentication failed.';
+     
         }
     } catch (error) {
         responseMessage.textContent = 'An error occurred. Please try again.';
