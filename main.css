@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Default css values for Light Mode */
+:root {
+    --tw-text-opacity: 1;
+    --primaryTextColor: black; 
+    --backgroundColor: #f3fbfc;
+    --primaryColor:#30cfcc;
+  }
+
+.dark {
+    --primaryTextColor: white;
+    --backgroundColor: #030b0c;
+    --primaryColor:#30cfcc;
+  }
