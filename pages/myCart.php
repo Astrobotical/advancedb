@@ -6,12 +6,12 @@
   <title>Shopping Cart</title>
   <link href="../../public/css/tailwind.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class=" text-gray-800 font-sans">
   <!-- Navbar -->
   <?php include __DIR__ . '../../components/navbar.php'; ?>
 
   <!-- Cart Page Header -->
-  <header class="bg-bgColor text-white py-6">
+  <header class="bg-bgColor  py-6">
     <h1 class="text-center text-4xl font-bold">Shopping Cart</h1>
   </header>
 
@@ -19,7 +19,7 @@
   <main class="px-6 md:px-16 py-12 bg-bgColor h-screen">
     <div class="max-w-4xl mx-auto">
       <!-- Cart Items -->
-      <div class="bg-gray-600 shadow-md rounded-lg p-6 mb-6">
+      <div class="bg-base-100 shadow-md rounded-lg p-6 mb-6">
         <h2 class="text-2xl font-bold mb-4 text-primaryTextColor">Your Cart</h2>
         <div class="space-y-4">
           <!-- Item Row -->
@@ -45,7 +45,7 @@
       </div>
 
       <!-- Order Summary -->
-      <div class=" shadow-md rounded-lg p-6 bg-gray-600">
+      <div class=" shadow-md rounded-lg p-6 bg-base-100">
         <h2 class="text-2xl font-bold mb-4 text-primaryTextColor">Order Summary</h2>
         <div class="flex justify-between items-center mb-2">
           <p class="text-primaryTextColor">Subtotal</p>

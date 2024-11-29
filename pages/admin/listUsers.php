@@ -9,47 +9,30 @@
 <body class="bg-bgColor text-gray-800 font-sans h-screen">
 <?php include '../../components/navbar.php';?>
   <!-- Header -->
-  <header class="bg-bgColor text-white py-6">
+  <header class="bg-bgColor text-primaryColor py-6">
     <h1 class="text-center text-3xl font-bold">Users Management</h1>
   </header>
   <!-- Main Content -->
   <main class="px-6 md:px-16 py-12 max-h-screen">
     <div class="max-w-6xl mx-auto ">
       <!-- Table -->
-      <div class="overflow-x-auto">
-        <table class="table w-fullh  border-collapse">
-          <thead>
-            <tr class="bg-teal-600 text-white">
-              <th class="px-4 py-2">#</th>
-              <th class="px-4 py-2">First Name</th>
-              <th class="px-4 py-2">Last Name</th>
-              <th class="px-4 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="userTable">
-            <!-- Example Row (to be replaced dynamically) -->
-            <!-- PHP Backend: Fetch Users -->
-            <?php
-              // Assuming `$users` is an array of users fetched from your database
-              $users = [
-                ['id' => 1, 'first_name' => 'John', 'last_name' => 'Doe'],
-                ['id' => 2, 'first_name' => 'Jane', 'last_name' => 'Smith'],
-              ];
-              foreach ($users as $index => $user) {
-                echo "<tr class='text-white bg-gray-500'>
-                  <td class='px-4 py-2'>" . ($index + 1) . "</td>
-                  <td class='px-4 py-2'>{$user['first_name']}</td>
-                  <td class='px-4 py-2'>{$user['last_name']}</td>
-                  <td class='px-4 py-2 space-x-2'>
-                    <button class='btn btn-sm btn-primary text-primaryTextColor' onclick='editUser({$user['id']}, \"{$user['first_name']}\", \"{$user['last_name']}\")'>Edit</button>
-                    <button class='btn btn-sm btn-error text-primaryTextColor' onclick='deleteUser({$user['id']})'>Delete</button>
-                  </td>
-                </tr>";
-              }
-            ?>
-          </tbody>
-        </table>
-      </div>
+      <div class="container mx-auto mt-6">
+  <table class="table w-full border-collapse border border-gray-300">
+    <thead>
+      <tr class="bg-teal-600 text-white">
+        <th class="px-4 py-2">#</th>
+        <th class="px-4 py-2">First Name</th>
+        <th class="px-4 py-2">Last Name</th>
+        <th class="px-4 py-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="userTable" class="text-center">
+      <!-- Content will be dynamically loaded -->
+    </tbody>
+  </table>
+  <!-- Placeholder for messages -->
+  <div id="message" class="mt-4 text-center text-gray-500"></div>
+</div>
     </div>
   </main>
 
@@ -77,6 +60,58 @@
 
   <!-- JavaScript -->
   <script>
+document.addEventListener('DOMContentLoaded', async function () {
+  // Function to fetch and populate the table
+  async function loadUserData() {
+    try {
+      // Make an HTTP GET request to fetch user data
+      const response = await fetch('loadUserData.php');
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json(); // Parse response as JSON
+
+      const userTable = document.getElementById('userTable');
+      const message = document.getElementById('message');
+
+      userTable.innerHTML = ''; // Clear any existing rows
+      message.innerHTML = ''; // Clear any previous messages
+
+      if (data.length === 0) {
+        // No data case
+        message.innerHTML = `<p class="text-red-500">No user data found.</p>`;
+        return;
+      }
+
+      // Populate the table with user data
+      data.forEach((user, index) => {
+        const userRow = document.createElement('tr');
+        userRow.className = 'text-white bg-gray-500 hover:bg-gray-400';
+
+        userRow.innerHTML = `
+          <td class="px-4 py-2 border border-gray-300">${index + 1}</td>
+          <td class="px-4 py-2 border border-gray-300">${user.first_name}</td>
+          <td class="px-4 py-2 border border-gray-300">${user.last_name}</td>
+          <td class="px-4 py-2 border border-gray-300 space-x-2">
+            <button class="btn btn-sm btn-primary text-white" onclick="editUser(${user.id}, '${user.first_name}', '${user.last_name}')">Edit</button>
+            <button class="btn btn-sm btn-error text-white" onclick="deleteUser(${user.id})">Delete</button>
+          </td>
+        `;
+
+        userTable.appendChild(userRow);
+      });
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      const message = document.getElementById('message');
+      message.innerHTML = `<p class="text-red-500">Error loading user data. Please try again later.</p>`;
+    }
+  }
+
+  // Load user data when the DOM is ready
+  loadUserData();
+});
+
     // Modal Elements
     const editModal = document.getElementById('editModal');
     const editForm = document.getElementById('editForm');
@@ -95,7 +130,6 @@
       editModal.classList.add('hidden');
     });
 
-    // Submit Edit Form (AJAX Simulation)
     editForm.addEventListener('submit', function (event) {
       event.preventDefault();
       const formData = new FormData(editForm);

@@ -12,7 +12,6 @@ $connection = [
     "Database" => $database,
     "Uid" => $uid,
     "PWD" => $pass,
-    "TrustServerCertificate" => true
 ];
 try{
 // Establish the connection

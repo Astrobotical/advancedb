@@ -44,7 +44,7 @@ $user  = $_SESSION['user'] ?? null;
       <li><a href="/index.php" class="text-primaryTextColor hover:hover:bg-grey-500">Welcome Page</a></li>
       <li><a href="/pages/aboutus.php" class="text-primaryTextColor hover:hover:bg-grey-500">About Us</a></li>
       <li><a href="/pages/products.php" class="text-primaryTextColor hover:hover:bg-grey-500">Products</a></li>
-      <li> 
+      <li class="z-50"> 
         <details>
           <summary class="text-primaryTextColor hover:hover:bg-grey-500" >Account</summary>
           <ul class="p-2 w-max">
@@ -52,12 +52,12 @@ $user  = $_SESSION['user'] ?? null;
           <details open>
             <summary class="text-btnPrimary hover:hover:bg-grey-500" >Admin Pages</summary>
             <ul>
-            <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="./pages/admin/listUsers.php">Users Management</a></li>
-            <li><a class="text-primaryTextColor" href="./pages/admin/productsmodificationpage.php">Edit Products</a></li>
+            <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/admin/listUsers.php">Users Management</a></li>
+            <li><a class="text-primaryTextColor" href="/pages/admin/productsmodificationpage.php">Edit Products</a></li>
             </ul>
           </details>
         </li>
-            <li class="text-primaryTextColor hover:hover:bg-grey-500"><a>Order Details</a></li>
+            <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/orderDetails.php">Order Details</a></li>
           
 
           </ul>

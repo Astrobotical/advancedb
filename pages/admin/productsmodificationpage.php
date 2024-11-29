@@ -1,4 +1,5 @@
 <?php
+ini_set('display_errors', 0);
 // Server and database configuration
 $servername = "BURKE\SQLEXPRESS";
 $database = "EcommerceDB";

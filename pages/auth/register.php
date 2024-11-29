@@ -118,42 +118,42 @@ button:hover {
             <h2 class="mb-5 text-white text-2xl">Sign Up</h2>
             <div class="form-group">
                 <label class="text-white font-bold" for="username">Username:</label>
-                <input type="text" id="username" class="text-white mt-3" name="username" onkeyup="checkUsernameExists(this.value)">
+                <input type="text" id="username" class="text-primaryColor mt-3" placeholder="Enter a username" name="username" onkeyup="checkUsernameExists(this.value)">
                 <p id="Uerror" class="error"></p>
             </div>
             <div class="form-group">
                 <label class="text-white font-bold" for="username">First Name:</label>
-                <input type="text" id="Fname" class="text-white mt-3" name="username" >
+                <input type="text" id="Fname" class="text-primaryColor mt-3" placeholder="Enter your first name" name="username" >
                 <p id="Ferror" class="error"></p>
             </div>
             <div class="form-group">
                 <label class="text-white font-bold" for="username">Last Name:</label>
-                <input type="text" id="Lname" class="text-white mt-3" name="username" >
+                <input type="text" id="Lname" class="text-primaryColor mt-3" placeholder="Enter your last name" name="username" >
                 <p id="Lerror" class="error"></p>
             </div>
             <div class="form-group">
                 <label class="text-white font-bold" for="email">Email:</label>
-                <input type="email" id="email" class="text-white mt-3" name="email" onkeyup="checkIfEmailPresent(this.value)" >
+                <input type="email" id="email" class="text-primaryColor mt-3" name="email" placeholder="Enter your email" onkeyup="checkIfEmailPresent(this.value)" >
                 <p id="Eerror" class="error"></p>
             </div>
             <div class="form-group">
                 <label class="text-white font-bold" for="username">Address:</label>
-                <input type="text" id="address" class="text-white mt-3" name="address"required >
+                <input type="text" id="address" class="text-primaryColor mt-3" placeholder="Enter your address" name="address"required >
                 <p id="Aerror" class="error"></p>
             </div>
             <div class="form-group">
                 <label class="text-white font-bold" for="username">Date of Birth:</label>
-                <input type="date" id="DOB" class="text-white mt-3" name="DOB" required >
+                <input type="date" id="DOB" class="text-primaryColor mt-3" name="DOB" required >
                 <p id="Derror" class="error"></p>
             </div>
             <div class="form-group">
                 <label class="text-white font-bold" for="password">Password:</label>
-                <input type="password" id="password" class="text-white mt-3" name="password" onkeyup="checkPasswordExpression(this.value)" >
+                <input type="password" id="password" class="text-primaryColor mt-3" name="password" placeholder="Enter your password" onkeyup="checkPasswordExpression(this.value)" >
                 <p id="Perror" class="error text-1xl text-red-500"></p>
             </div>
             <div class="form-group">
                 <label class="text-white font-bold" for="password">Confirm Password:</label>
-                <input type="password" id="confirmPassword" class="text-white mt-3" name="confirmPassword"  >
+                <input type="password" id="confirmPassword" class="text-primaryColor mt-3" placeholder="Confirm your password" name="confirmPassword"  >
                 <p id="CPerror" class="error  "></p>
             </div> 
             <button type="button" onclick="processData()">Login</button>
