@@ -12,7 +12,6 @@ $connection = [
     "Database" => $database,
     "Uid" => $uid,
     "PWD" => $pass,
-    "TrustServerCertificate" => true
 ];
 
 // Establish the connection
@@ -120,7 +119,7 @@ $stmt = sqlsrv_query($conn, $sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ecommerce Website - Manage Products</title>
-    <?php include("links.php"); ?>
+    <link href="../../public/css/tailwind.css" rel="stylesheet">
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
         header { background: #333; color: #fff; padding: 20px; text-align: center; margin-top:5%; }
@@ -140,7 +139,7 @@ $stmt = sqlsrv_query($conn, $sql);
     </style>
 </head>
 <body>
-<?php include 'navbar.php';?>
+<?php include '../../components/navbar.php';?>
 <header>
     <h1>Manage Products</h1>
 </header>

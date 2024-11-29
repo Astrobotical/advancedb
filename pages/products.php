@@ -37,7 +37,7 @@ if (isset($_GET['categoryID']) && !empty($_GET['categoryID'])) {
 }
 
 // Prepare the statement
-//$stmt = sqlsrv_query($conn, $sql, $params);
+$stmt = sqlsrv_query($conn, $sql, $params);
 
 if ($stmt === false) {
     die(print_r(sqlsrv_errors(), true));
@@ -53,7 +53,7 @@ if ($stmt === false) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ecommerce Website</title>
-    <?php include("links.php"); ?>
+    <link href="../../public/css/tailwind.css" rel="stylesheet">
     <style>
         /* General page layout */
         body {
@@ -174,6 +174,7 @@ if ($stmt === false) {
     </style>
 </head>
 <body>
+<?php include __DIR__ . '../../components/navbar.php'; ?>
 <header>
     <h1>Welcome to Our Ecommerce Store</h1>
 </header>

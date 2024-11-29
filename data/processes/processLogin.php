@@ -1,6 +1,6 @@
 
 <?php
-require('./data/connection.php');
+require('/../connection.php');
 $connectionString = new ConnectionString();
 
 try {
