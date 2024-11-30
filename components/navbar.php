@@ -3,8 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
 $user  = $_SESSION['user'] ?? null;
-$userIsLoggedIn = $_SESSION['userLoggedIn'] ?? null;
-$userRole = $_SESSION['userRole'] ?? null;
+$userIsLoggedIn =  1; //$_SESSION['userLoggedIn'] ?? null;
+$userRole = 'Admin'; //$_SESSION['userRole'] ?? null;
 ?>
 
 <div class="navbar bg-base-100">
@@ -66,7 +66,7 @@ $userRole = $_SESSION['userRole'] ?? null;
         </li>
         <?php }?>
             <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/orderDetails.php">Order Details</a></li>
-          
+            <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/profileSettings.php">Profile Settings</a></li>
 
           </ul>
         </details>

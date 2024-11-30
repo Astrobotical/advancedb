@@ -27,7 +27,6 @@
       </tr>
     </thead>
     <tbody id="userTable">
-      <!-- Data will be inserted dynamically -->
     </tbody>
   </table>
 
@@ -85,12 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await response.json();
-
-      // Clear previous content
       userTable.innerHTML = '';
       noDataMessage.classList.add('hidden');
-
-      // Check if data exists
       if (data.length === 0) {
         noDataMessage.classList.remove('hidden');
         return;
@@ -175,11 +170,25 @@ document.addEventListener('DOMContentLoaded', () => {
   
     });
 
-    // Simulate Delete User
-    function deleteUser(userId) {
+    async function deleteUser(userId) {
+      uniqueID
       if (confirm('Are you sure you want to delete this user?')) {
         alert(`User ID ${userId} deleted.`);
-        // Perform deletion (AJAX or Page Reload)
+        try {
+        const response = await fetch('../../data/processes/processUsers.php', {
+          method: 'DELETE',headers: {'Content-Type': 'application/json',},
+      body: JSON.stringify({uniqueID:userId}),
+    });
+    const result = await response.json();
+    if (response.ok) {
+      alert('User wad deleted successfully!');
+      loadUserData(); 
+    } else {
+      alert(`Error: ${result.error}`);
+    }} catch (error) {
+    //console.error('Failed to update user:', error);
+   // alert('An error occurred. Please try again later.');
+  }
       }
     }
   </script>
