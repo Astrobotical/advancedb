@@ -46,9 +46,9 @@ try {
         setcookie('username', $user['username'], time() + (30 * 24 * 60 * 60), '/');
         setcookie('rememberMe', true, time() + (30 * 24 * 60 * 60), '/');
     }
-
+    $_SESSION['userLoggedIn'] = 1;
+    $_SESSION['userRole'] = $user['RoleID'] == 1 ? 'Admin':'Customer'; 
     http_response_code(200); 
-
     echo json_encode([
         "status" => "success",
         "message" => "Login successful.",

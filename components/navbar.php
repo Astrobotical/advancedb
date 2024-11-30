@@ -1,5 +1,10 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+  session_start();
+}
 $user  = $_SESSION['user'] ?? null;
+$userIsLoggedIn = $_SESSION['userLoggedIn'] ?? null;
+$userRole = $_SESSION['userRole'] ?? null;
 ?>
 
 <div class="navbar bg-base-100">
@@ -44,10 +49,12 @@ $user  = $_SESSION['user'] ?? null;
       <li><a href="/index.php" class="text-primaryTextColor hover:hover:bg-grey-500">Welcome Page</a></li>
       <li><a href="/pages/aboutus.php" class="text-primaryTextColor hover:hover:bg-grey-500">About Us</a></li>
       <li><a href="/pages/products.php" class="text-primaryTextColor hover:hover:bg-grey-500">Products</a></li>
+      <?php if(isset($userIsLoggedIn)){ ?>
       <li class="z-50"> 
         <details>
           <summary class="text-primaryTextColor hover:hover:bg-grey-500" >Account</summary>
           <ul class="p-2 w-max">
+            <?php if(isset($userRole) && $userRole == 'Admin'){ ?>
           <li>
           <details open>
             <summary class="text-btnPrimary hover:hover:bg-grey-500" >Admin Pages</summary>
@@ -57,12 +64,14 @@ $user  = $_SESSION['user'] ?? null;
             </ul>
           </details>
         </li>
+        <?php }?>
             <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/orderDetails.php">Order Details</a></li>
           
 
           </ul>
         </details>
       </li>
+      <?php } ?>
       <li> <a href="/pages/myCart.php" class="text-primaryTextColor hover:hover:bg-grey-500">Cart<?php ?></a>
 
         <!--
