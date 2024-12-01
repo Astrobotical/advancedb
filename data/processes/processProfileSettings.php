@@ -2,16 +2,29 @@
 require('../connection.php');
 $connectionString = new ConnectionString();
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $userID = $_SESSION['userID']; 
-    if (!$userID) {
+switch ($_SERVER['REQUEST_METHOD']){
+    case 'GET':
+        getUser();
+    break;
+    case 'POST':
+        updateUser();
+        break;
+
+    default:
+    http_response_code(405);
+    echo json_encode(["error" => "Unsupported HTTP method"]);
+}
+function getUser() {
+    global $connectionString;
+    $username = $_SESSION['username']; 
+    if (!$username) {
         http_response_code(403); 
         echo json_encode(["error" => "User not authenticated"]);
         exit();
     }
+    $sql = "SELECT username, firstName, lastName, address, DOB, email FROM Users WHERE username = ?";
 
-    $sql = "SELECT username, firstName, lastName, address, DOB, email FROM Users WHERE uniqueID = ?";
-    $params = [$userID];
+    $params = [$username];
     $stmt = sqlsrv_query($connectionString->connection, $sql, $params);
 
     if ($stmt === false) {
@@ -24,23 +37,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(["error" => "User not found"]);
         exit();
     }
-
+    http_response_code(200); 
     echo json_encode(["success" => true, "user" => $user]);
-} else {
-    http_response_code(405); // Method Not Allowed
-    echo json_encode(["error" => "Unsupported HTTP method"]);
+    http_response_code(200); 
 }
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+function updateUser() {
+    global $connectionString;
     $input = json_decode(file_get_contents('php://input'), true);
-
+   // echo json_encode($input);
     // Validate input
+    
     if (!isset($input['username'], $input['firstName'], $input['lastName'], $input['address'], $input['dob'], $input['email'])) {
         http_response_code(400); // Bad Request
-        echo json_encode(["error" => "Missing required fields"]);
+        echo json_encode(["error" => $input['username']]);
         exit();
     }
 
-    $userID = $_SESSION['userID']; // Ensure user is authenticated and get their ID
+    $userID = 1; // Ensure user is authenticated and get their ID
     if (!$userID) {
         http_response_code(403); // Forbidden
         echo json_encode(["error" => "User not authenticated"]);
@@ -77,8 +90,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     sqlsrv_commit($connectionString->connection); // Commit transaction
     echo json_encode(["success" => "Profile updated successfully"]);
-} else {
-    http_response_code(405); // Method Not Allowed
-    echo json_encode(["error" => "Unsupported HTTP method"]);
 }
 ?>

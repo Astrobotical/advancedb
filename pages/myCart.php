@@ -1,3 +1,8 @@
+<?php
+require('/../data/connection.php');
+$connectionString = new ConnectionString();
+$connection = $connectionString->connection;
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,13 +11,13 @@
   <title>Shopping Cart</title>
   <link href="../../public/css/tailwind.css" rel="stylesheet">
 </head>
-<body class=" text-gray-800 font-sans">
+<body class="bg-bgColor  font-sans">
   <!-- Navbar -->
   <?php include __DIR__ . '../../components/navbar.php'; ?>
 
   <!-- Cart Page Header -->
-  <header class="bg-bgColor  py-6">
-    <h1 class="text-center text-4xl font-bold">Shopping Cart</h1>
+  <header class="text-primaryTextColor  py-6">
+    <h1 class="text-center text-4xl font-bold text-primaryTextColor">Shopping Cart</h1>
   </header>
 
   <!-- Cart Content -->
@@ -38,16 +43,16 @@
           <p class="font-bold text-lg text-primaryTextColor">Total</p>
           <p class="font-bold text-lg text-primaryTextColor">$0.00</p>
         </div>
-        <button class="w-full mt-4 bg-btnPrimary text-white py-3 rounded-lg shadow hover:bg-teal-600">
+        <button class="w-full mt-4 bg-btnPrimary text-white py-3 rounded-lg shadow hover:bg-teal-600" id="proceedToCheckoutBtn">
           Proceed to Checkout
         </button>
       </div>
     </div>
     <div id="checkoutModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-lg w-96">
-            <h2 class="text-2xl font-bold mb-4">Checkout</h2>
+        <div class="bg-bgColor p-6 rounded-lg w-96  border border-solid border-white">
+            <h2 class="text-2xl font-bold mb-4 text-primaryTextColor">Checkout</h2>
             <div class="mb-4">
-                <label for="paymentMethodSelect" class="block text-lg">Payment Method</label>
+                <label for="paymentMethodSelect" class="block text-lg text-primaryTextColor">Payment Method</label>
                 <select id="paymentMethodSelect" class="w-full border rounded-md py-2 px-3">
                     <option value="new">Use New Card</option>
                     <?php
@@ -65,13 +70,13 @@
 
             <!-- New Card Details (Hidden by default) -->
             <div id="newCardFields" class="space-y-4">
-                <label for="cardNumber" class="block text-sm font-medium">Card Number</label>
+                <label for="cardNumber" class="block text-sm font-medium text-primaryTextColor">Card Number</label>
                 <input type="text" id="cardNumber" class="w-full border rounded-md py-2 px-3" placeholder="Enter Card Number" maxlength="16">
 
-                <label for="expiryDate" class="block text-sm font-medium">Expiry Date</label>
+                <label for="expiryDate" class="block text-sm font-medium text-primaryTextColor">Expiry Date</label>
                 <input type="month" id="expiryDate" class="w-full border rounded-md py-2 px-3">
 
-                <label for="cvv" class="block text-sm font-medium">CVV</label>
+                <label for="cvv" class="block text-sm font-medium text-primaryTextColor">CVV</label>
                 <input type="text" id="cvv" class="w-full border rounded-md py-2 px-3" placeholder="Enter CVV" maxlength="4">
             </div>
 
@@ -139,7 +144,7 @@
         });
 async function loadCartItems() {
   try {
-    const response = await fetch('../../data/processes/cartActions.php?method=GET');
+    const response = await fetch('../../data/processes/processCart.php?method=GET');
     const data = await response.json();
 
     if (!response.ok) throw new Error(data.error || 'Failed to load cart data.');
@@ -148,7 +153,7 @@ async function loadCartItems() {
     cartItemsContainer.innerHTML = ''; // Clear existing content
 
     if (data.length === 0) {
-      cartItemsContainer.innerHTML = '<p class="text-center text-gray-500">Your cart is empty.</p>';
+      cartItemsContainer.innerHTML = '<p class="text-center  mb-6 text-primaryTextColor">Your cart is empty.</p>';
       return;
     }
 

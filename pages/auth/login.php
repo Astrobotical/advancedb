@@ -204,7 +204,7 @@ const response = await fetch('../../data/processes/processLogin.php', {
             responseMessage.textContent = data.message || 'Authentication successful!';
             responseMessage.classList.add('success');
             responseMessage.classList.remove('error');
-            window.location.href = 'index.php'; 
+            window.location.href = '/index.php'; 
             
         } else if(response.status == 401) {
             responseMessage.classList.remove('success');

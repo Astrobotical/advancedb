@@ -277,7 +277,7 @@ button:hover {
             responseMessage.classList.add('success');
             responseMessage.classList.remove('error');
             responseMessage.textContent = data.message || 'Authentication successful!';
-            window.location.href = 'index.php'; 
+            window.location.href = '/index.php'; 
           
         } else if(response.status ==  500) {
             responseMessage.classList.add('error');

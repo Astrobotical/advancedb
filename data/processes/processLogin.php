@@ -48,6 +48,7 @@ try {
     }
     $_SESSION['userLoggedIn'] = 1;
     $_SESSION['userRole'] = $user['RoleID'] == 1 ? 'Admin':'Customer'; 
+    $_SESSION['userID'] = $user['uniqueID'];
     http_response_code(200); 
     echo json_encode([
         "status" => "success",

@@ -3,8 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
 $user  = $_SESSION['user'] ?? null;
-$userIsLoggedIn =  1; //$_SESSION['userLoggedIn'] ?? null;
-$userRole = 'Admin'; //$_SESSION['userRole'] ?? null;
+$userIsLoggedIn =   $_SESSION['userLoggedIn'] ?? null;
+$userRole = $_SESSION['userRole'] ?? null;
 ?>
 
 <div class="navbar bg-base-100">
@@ -127,8 +127,8 @@ $userRole = 'Admin'; //$_SESSION['userRole'] ?? null;
     </svg>
   </label>
 -->
-    <a class="btn bg-btnPrimary text-white" href="<?php echo ($user == null) ? '/pages/auth/login.php' : '/pages/auth/register.php'; ?>" >
-      <?php echo ($user == null) ? 'Login' : 'Logout'; ?>
+    <a class="btn bg-btnPrimary text-white" href="<?php echo ($userIsLoggedIn == null) ? '/pages/auth/login.php' : '/pages/auth/logout.php'; ?>" >
+      <?php echo ($userIsLoggedIn == null) ? 'Login' : 'Logout'; ?>
     </a>
   </div>
 </div>

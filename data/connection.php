@@ -1,5 +1,7 @@
 <?php
-
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+  }
 class ConnectionString
 {
     protected $serverName = "BURKE\SQLEXPRESS"; // Host and instance

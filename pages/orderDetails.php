@@ -6,7 +6,7 @@
   <title>Order History</title>
   <link href="../../public/css/tailwind.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 h-screen">
+<body class="bg-bgColor h-screen">
 <?php include __DIR__ . '../../components/navbar.php'; ?>
   <div class="max-w-5xl mx-auto p-4">
     <header class="mb-6">
@@ -17,7 +17,7 @@
     <!-- Order List -->
     <div class="space-y-6">
       <!-- Single Order -->
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-base-100 rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-4">
           <div>
             <h2 class="text-xl font-semibold text-primaryTextColor">Order ID: #123456</h2>
@@ -72,7 +72,7 @@
       </div>
 
       <!-- Another Order -->
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-base-100 rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-4">
           <div>
             <h2 class="text-xl font-semibold text-primaryTextColor">Order ID: #654321</h2>
@@ -135,6 +135,6 @@
       element.classList.toggle('hidden');
     }
   </script>
-
+<script src="../../assets/js/scripts.js"></script>
 </body>
 </html>
