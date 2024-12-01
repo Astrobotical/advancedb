@@ -101,7 +101,7 @@ $connection = $connectionString->connection;
         </div>
         <div class="flex justify-between items-center border-t pt-4 mt-4">
           <p class="font-bold text-lg text-primaryTextColor">Payment Method </p>
-          <p class="font-bold text-lg text-primaryTextColor" id="paymentMethodCard"></p>'
+          <p class="font-bold text-lg text-primaryTextColor" id="paymentMethodCard"></p>
           <input type="hidden" id="paymentMethods">
         </div>
 
@@ -121,8 +121,8 @@ $connection = $connectionString->connection;
 
         <!-- Action Buttons -->
         <div class="flex justify-end mt-4 space-x-2">
-            <button id="closeModalBtn" class="bg-gray-500 text-white px-4 py-2 rounded-md">Cancel</button>
-            <button id="confirmPaymentBtn" class="bg-btnPrimary text-white px-4 py-2 rounded-md">Confirm</button>
+            <button id="closeModalCheckoutBtn" class="bg-gray-500 text-white px-4 py-2 rounded-md">Cancel</button>
+            <button id="confirmPaymentCheckoutBtn" class="bg-btnPrimary text-white px-4 py-2 rounded-md">Confirm</button>
         </div>
     </div>
 </div>
@@ -139,7 +139,14 @@ $connection = $connectionString->connection;
         document.getElementById('closeModalBtn').addEventListener('click', function () {
             document.getElementById('paymentMethodsModal').classList.add('hidden');
         });
+        document.getElementById('confirmPaymentCheckoutBtn').addEventListener('click', function () {
+            document.getElementById('makePaymentModal').classList.add('hidden');
 
+        });
+        document.getElementById('closeModalCheckoutBtn').addEventListener('click', function () {
+            document.getElementById('makePaymentModal').classList.add('hidden');
+            cardData = {};
+        });
         // Toggle between using a new card or saved card
         document.getElementById('paymentMethodSelect').addEventListener('change', function () {
             const newCardFields = document.getElementById('newCardFields');
@@ -152,51 +159,64 @@ $connection = $connectionString->connection;
 
         // Handle checkout form submission
         document.getElementById('selectPaymentMethodBtn').addEventListener('click', async function () {
-            const paymentMethod = document.getElementById('paymentMethodSelect').value;
+            const paymentMethod = document.getElementById('paymentMethodSelect');
         
             let cartItems =[]; 
-            if (paymentMethod === 'new') {
+            if (paymentMethod.value === 'new') {
                 cardData.cardNumber = document.getElementById('cardNumber').value;
                 cardData.expiryDate = document.getElementById('expiryDate').value;
                 cardData.cvv = document.getElementById('cvv').value;
-                await addPaymentMethod(cardData);
+                await addPaymentMethod();
             } else {
-
+               //Hide current modal 
+            document.getElementById('paymentMethodsModal').classList.add('hidden');
+            //Show next modal
+            document.getElementById('makePaymentModal').classList.remove('hidden');
+              //console.log(paymentMethod.options[paymentMethod.selectedIndex].text);
                 cardData.paymentMethodID = paymentMethod;
-                cardData.paymentCard = paymentMethod
+                cardData.paymentCard = paymentMethod.options[paymentMethod.selectedIndex].text;
+                
             }
             console.log(cardData.paymentCard)
-            document.getElementById('makePaymentModal').classList.remove('hidden');
-            document.getElementById('paymentMethodsModal').classList.add('hidden');
+       
             document.getElementById('paymentMethods').value = cardData.paymentMethodID;
-            document.getElementById('paymentMethodCard').value =cardData.paymentCard;
+            document.getElementById('paymentMethodCard').innerText =cardData.paymentCard;
            
         });
-        async function addPaymentMethod(cardData= {}){
-          const paymentResponse = await fetch('../../data/processes/processPaymentMethods.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(cardData)});
-          if(paymentResponse.ok){
-            let data =paymentResponse.json();
-            cardData.paymentMethodID = paymentResponse.paymentMethodID;
-            cardData.paymentCard =paymentResponse.paymentCard;
-          }
-        }
-        async function checkOut(){
-          const result = await response.json();
-            if (result.success) {
-                alert('Checkout successful!');
-                window.location.href = 'orderConfirmation.php'; // Redirect to order confirmation page
-            } else {
-                alert('Error during checkout: ' + result.error);
-            }
+        async function addPaymentMethod() {
+  try {
+    const paymentResponse = await fetch('../../data/processes/processPaymentMethods.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(cardData),
+    });
 
-            // Close the modal after processing
-            document.getElementById('checkoutModal').classList.add('hidden');
-        }
+    if (paymentResponse.ok) {
+      const data = await paymentResponse.json(); // Await to parse JSON
+
+      // Assuming the response contains `paymentMethodID` and `paymentCard`
+      cardData.paymentMethodID = data.paymentMethodID;
+      cardData.paymentCard = data.paymentCard;
+
+      // Hide current modal
+      document.getElementById('paymentMethodsModal').classList.add('hidden');
+      // Show next modal
+      document.getElementById('makePaymentModal').classList.remove('hidden');
+
+      console.log(data); // Log the response for debugging
+    } else {
+      // Handle HTTP errors
+      console.error('Failed to add payment method:', paymentResponse.status);
+      alert('Failed to add payment method. Please try again.');
+    }
+  } catch (error) {
+    // Handle network or unexpected errors
+    console.error('An error occurred:', error);
+    alert('An unexpected error occurred. Please try again.');
+  }
+}
 async function loadCartItems() {
   try {
     const response = await fetch('../../data/processes/processCart.php?method=GET');

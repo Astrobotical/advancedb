@@ -1,54 +1,72 @@
 <?php
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 // Server and database configuration
-$servername = "BURKE\SQLEXPRESS";
+$servername = "BURKE\\SQLEXPRESS";
 $database = "EcommerceDB";
 
 // Windows Authentication
-$uid = ""; 
-$pass = ""; 
+$uid = "";
+$pass = "";
 
 // Connection options
-$connection = [
+$connectionOptions = [
     "Database" => $database,
     "Uid" => $uid,
     "PWD" => $pass,
 ];
 
 // Establish the connection
-$conn = sqlsrv_connect($servername, $connection);
-
-// Check the connection
+$conn = sqlsrv_connect($servername, $connectionOptions);
 if (!$conn) {
     die(print_r(sqlsrv_errors(), true));
 }
 
-// Handling Add Product
+// Ensure the 'productsimages' folder exists
+$uploadDir = 'productsimages';
+if (!is_dir($uploadDir)) {
+    mkdir($uploadDir, 0777, true);  // Create the directory if it doesn't exist
+}
+
+// Handle Add Category
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['addCategory'])) {
+    $categoryType = $_POST['type'];
+
+    $sql = "INSERT INTO Categories (type) VALUES (?)";
+    $params = [$categoryType];
+    $stmt = sqlsrv_query($conn, $sql, $params);
+
+    if ($stmt === false) {
+        die(print_r(sqlsrv_errors(), true));
+    }
+
+    echo "Category added successfully!";
+}
+
+// Handle Add Product
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['addProduct'])) {
-    // Get form data for adding product
     $productName = $_POST['productName'];
     $productCost = $_POST['productCost'];
     $productQuantity = $_POST['productQuantity'];
     $categoryID = $_POST['categoryID'];
-    $imageData = null; // Default value if no image is uploaded
 
     // Handle image upload
+    $productImagePath = '';
     if (isset($_FILES['productImage']) && $_FILES['productImage']['error'] == 0) {
         $imageTmpName = $_FILES['productImage']['tmp_name'];
-        $imageData = file_get_contents($imageTmpName); // Read the image into binary data
+        $imageName = basename($_FILES['productImage']['name']);
+        $productImagePath = $uploadDir . '/' . $imageName;  // Save path relative to 'productsimages' folder
+
+        // Move the uploaded image to the 'productsimages' folder
+        if (!move_uploaded_file($imageTmpName, $productImagePath)) {
+            die("Failed to upload image.");
+        }
     }
 
-    // Insert product into the database
-    if ($imageData) {
-        $sql = "INSERT INTO products (productName, productCost, productQuantity, CategoryID, productImage) 
-                VALUES (?, ?, ?, ?, CONVERT(VARBINARY(MAX), ?))";
-        $params = [$productName, $productCost, $productQuantity, $categoryID, $imageData];
-    } else {
-        $sql = "INSERT INTO products (productName, productCost, productQuantity, CategoryID) 
-                VALUES (?, ?, ?, ?)";
-        $params = [$productName, $productCost, $productQuantity, $categoryID];
-    }
-
+    $sql = "INSERT INTO Products (productName, productCost, productQuantity, CategoryID, productImage)
+            VALUES (?, ?, ?, ?, ?)";
+    $params = [$productName, $productCost, $productQuantity, $categoryID, $productImagePath];
     $stmt = sqlsrv_query($conn, $sql, $params);
 
     if ($stmt === false) {
@@ -58,32 +76,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['addProduct'])) {
     echo "Product added successfully!";
 }
 
-// Handling Modify Product
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['modifyProduct'])) {
+// Handle Update Product
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['updateProduct'])) {
     $productID = $_POST['productID'];
     $productName = $_POST['productName'];
     $productCost = $_POST['productCost'];
     $productQuantity = $_POST['productQuantity'];
     $categoryID = $_POST['categoryID'];
-    $imageData = null; // Default value if no image is uploaded
 
     // Handle image upload
+    $productImagePath = $_POST['existingImagePath'];  // Retain the existing image path if no new image is uploaded
     if (isset($_FILES['productImage']) && $_FILES['productImage']['error'] == 0) {
         $imageTmpName = $_FILES['productImage']['tmp_name'];
-        $imageData = file_get_contents($imageTmpName); // Read the image into binary data
+        $imageName = basename($_FILES['productImage']['name']);
+        $productImagePath = $uploadDir . '/' . $imageName;  // Save path relative to 'productsimages' folder
+
+        // Move the uploaded image to the 'productsimages' folder
+        if (!move_uploaded_file($imageTmpName, $productImagePath)) {
+            die("Failed to upload image.");
+        }
     }
 
-    // Update product in the database
-    if ($imageData) {
-        $sql = "UPDATE products SET productName = ?, productCost = ?, productQuantity = ?, CategoryID = ?, productImage = ? 
-                WHERE uniqueID = ?";
-        $params = [$productName, $productCost, $productQuantity, $categoryID, $imageData, $productID];
-    } else {
-        $sql = "UPDATE products SET productName = ?, productCost = ?, productQuantity = ?, CategoryID = ? 
-                WHERE uniqueID = ?";
-        $params = [$productName, $productCost, $productQuantity, $categoryID, $productID];
-    }
-
+    $sql = "UPDATE Products 
+            SET productName = ?, productCost = ?, productQuantity = ?, CategoryID = ?, productImage = ?
+            WHERE uniqueID = ?";
+    $params = [$productName, $productCost, $productQuantity, $categoryID, $productImagePath, $productID];
     $stmt = sqlsrv_query($conn, $sql, $params);
 
     if ($stmt === false) {
@@ -93,13 +110,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['modifyProduct'])) {
     echo "Product updated successfully!";
 }
 
-// Handling Delete Product
+// Handle Delete Product
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['deleteProduct'])) {
     $productID = $_POST['productID'];
 
-    // Delete product from the database
-    $sql = "DELETE FROM products WHERE uniqueID = ?";
+    // Fetch the image path to delete it from the server
+    $sql = "SELECT productImage FROM Products WHERE uniqueID = ?";
     $params = [$productID];
+    $stmt = sqlsrv_query($conn, $sql, $params);
+    if ($stmt === false) {
+        die(print_r(sqlsrv_errors(), true));
+    }
+    $product = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
+    $imagePath = $product['productImage'];
+
+    // Delete the image from the server
+    if (file_exists($imagePath)) {
+        unlink($imagePath);  // Delete the image file
+    }
+
+    // Delete the product from the database
+    $sql = "DELETE FROM Products WHERE uniqueID = ?";
     $stmt = sqlsrv_query($conn, $sql, $params);
 
     if ($stmt === false) {
@@ -109,9 +140,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['deleteProduct'])) {
     echo "Product deleted successfully!";
 }
 
-// Fetch all products for displaying
-$sql = "SELECT uniqueID, productName, productCost, productQuantity, CategoryID FROM products";
-$stmt = sqlsrv_query($conn, $sql);
+// Fetch Categories for Dropdown
+$categoriesQuery = "SELECT uniqueID, type FROM Categories";
+$categoriesStmt = sqlsrv_query($conn, $categoriesQuery);
+$categories = [];
+while ($row = sqlsrv_fetch_array($categoriesStmt, SQLSRV_FETCH_ASSOC)) {
+    $categories[] = $row;
+}
+
+// Fetch Products for Dropdown and Display
+$productsQuery = "SELECT uniqueID, productName FROM Products";
+$productsStmt = sqlsrv_query($conn, $productsQuery);
+$products = [];
+while ($row = sqlsrv_fetch_array($productsStmt, SQLSRV_FETCH_ASSOC)) {
+    $products[] = $row;
+}
 ?>
 
 <!DOCTYPE html>
@@ -119,166 +162,90 @@ $stmt = sqlsrv_query($conn, $sql);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ecommerce Website - Manage Products</title>
+    <title>Ecommerce - Manage Products & Categories</title>
     <link href="../../public/css/tailwind.css" rel="stylesheet">
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
-        header { background: #333; color: #fff; padding: 20px; text-align: center; margin-top:5%; }
-        .container { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
-        .product-card { background: #fff; border: 1px solid #ddd; border-radius: 10px; width: 250px; margin: 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease-in-out; }
-        .product-card:hover { transform: translateY(-10px); }
-        .product-card img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px 10px 0 0; }
-        .product-info { padding: 15px; text-align: center; }
-        .product-info h3 { margin: 0; font-size: 18px; color: #333; }
-        .product-info p { margin: 5px 0; font-size: 14px; color: #555; }
-        .product-info .price { font-size: 16px; font-weight: bold; color: #e91e63; }
-        .product-info .btn { display: inline-block; margin-top: 10px; padding: 10px 15px; background: #e91e63; color: #fff; text-decoration: none; border-radius: 5px; }
-        .product-info .btn:hover { background: #c2185b; }
-        form { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); margin-top: 30px; }
-        form input, form select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
-        form button { padding: 10px 15px; background: #333; color: #fff; border: none; border-radius: 5px; }
-    </style>
 </head>
 <body>
-<?php include '../../components/navbar.php';?>
-<header>
-    <h1>Manage Products</h1>
-</header>
+<?php include '../../components/navbar.php'; ?>
+<div class="container mx-auto mt-10 p-4">
+    <h1 class="text-2xl font-bold mb-6">Manage Products & Categories</h1>
 
-<div class="container">
-    <!-- Add Product Form -->
-    <h2>Add Product</h2>
-    <form action="" method="POST" enctype="multipart/form-data">
-        <input type="text" name="productName" placeholder="Product Name" required><br>
-        <input type="number" step="0.01" name="productCost" placeholder="Product Cost" required><br>
-        <input type="number" name="productQuantity" placeholder="Product Quantity" required><br>
-        <input type="text" name="categoryID" placeholder="Category ID" required><br>
-        <input type="file" name="productImage" accept="image/*"><br>
-        <button type="submit" name="addProduct">Add Product</button>
-    </form>
+    <!-- Add Category Section -->
+    <div class="mb-6">
+        <h2 class="text-xl font-bold mb-2">Add Category</h2>
+        <form action="" method="POST">
+            <input type="text" name="categoryType" placeholder="Category Name" required class="border p-2 w-full mb-4">
+            <button type="submit" name="addCategory" class="bg-blue-500 text-white px-4 py-2 rounded">Add Category</button>
+        </form>
+    </div>
 
-    <!-- Modify Product Form -->
-    <h2>Modify Product</h2>
-    <form action="" method="POST" enctype="multipart/form-data">
-        <select name="productID" required>
-            <option value="">Select Product</option>
-            <?php while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)): ?>
-                <option value="<?= $row['uniqueID'] ?>"><?= $row['productName'] ?></option>
-            <?php endwhile; ?>
-        </select><br>
-        <input type="text" name="productName" placeholder="Product Name" required><br>
-        <input type="number" step="0.01" name="productCost" placeholder="Product Cost" required><br>
-        <input type="number" name="productQuantity" placeholder="Product Quantity" required><br>
-        <input type="text" name="categoryID" placeholder="Category ID" required><br>
-        <input type="file" name="productImage" accept="image/*"><br>
-        <button type="submit" name="modifyProduct">Modify Product</button>
-    </form>
+    <!-- Add Product Section -->
+    <div class="mb-6">
+        <h2 class="text-xl font-bold mb-2">Add Product</h2>
+        <form action="" method="POST" enctype="multipart/form-data">
+            <input type="text" name="productName" placeholder="Product Name" required class="border p-2 w-full mb-4">
+            <input type="number" step="0.01" name="productCost" placeholder="Product Cost" required class="border p-2 w-full mb-4">
+            <input type="number" name="productQuantity" placeholder="Product Quantity" required class="border p-2 w-full mb-4">
+            <select name="categoryID" required class="border p-2 w-full mb-4">
+                <option value="">Select Category</option>
+                <?php 
+                $categoryStmt = sqlsrv_query($conn, "SELECT uniqueID, type FROM Categories");
+                while ($row = sqlsrv_fetch_array($categoryStmt, SQLSRV_FETCH_ASSOC)) {
+                    echo "<option value='{$row['uniqueID']}'>{$row['type']}</option>";
+                }
+                ?>
+            </select>
+            <input type="file" name="productImage" accept="image/*" class="border p-2 w-full mb-4">
+            <button type="submit" name="addProduct" class="bg-green-500 text-white px-4 py-2 rounded">Add Product</button>
+        </form>
+    </div>
 
-    
+    <!-- Update Product Section -->
+    <div class="mb-6">
+        <h2 class="text-xl font-bold mb-2">Update Product</h2>
+        <form action="" method="POST" enctype="multipart/form-data">
+            <select name="productID" required class="border p-2 w-full mb-4">
+                <option value="">Select Product</option>
+                <?php 
+                $productStmt = sqlsrv_query($conn, "SELECT uniqueID, productName FROM Products");
+                while ($row = sqlsrv_fetch_array($productStmt, SQLSRV_FETCH_ASSOC)) {
+                    echo "<option value='{$row['uniqueID']}'>{$row['productName']}</option>";
+                }
+                ?>
+            </select>
+            <input type="text" name="productName" placeholder="Product Name" required class="border p-2 w-full mb-4">
+            <input type="number" step="0.01" name="productCost" placeholder="Product Cost" required class="border p-2 w-full mb-4">
+            <input type="number" name="productQuantity" placeholder="Product Quantity" required class="border p-2 w-full mb-4">
+            <select name="categoryID" required class="border p-2 w-full mb-4">
+                <option value="">Select Category</option>
+                <?php 
+                $categoryStmt = sqlsrv_query($conn, "SELECT uniqueID, type FROM Categories");
+                while ($row = sqlsrv_fetch_array($categoryStmt, SQLSRV_FETCH_ASSOC)) {
+                    echo "<option value='{$row['uniqueID']}'>{$row['type']}</option>";
+                }
+                ?>
+            </select>
+            <input type="file" name="productImage" accept="image/*" class="border p-2 w-full mb-4">
+            <button type="submit" name="updateProduct" class="bg-yellow-500 text-white px-4 py-2 rounded">Update Product</button>
+        </form>
+    </div>
 
-</body>
-</html>
-
-<?php
-// Free resources and close connection
-sqlsrv_free_stmt($stmt);
-sqlsrv_close($conn);
-?>
-
-<?php
-// Server and database configuration
-$servername = "DESKTOP-IIQI6MO\\SQLEXPRESS";
-$database = "EcommerceDB";
-
-// Windows Authentication
-$uid = ""; 
-$pass = ""; 
-
-// Connection options
-$connection = [
-    "Database" => $database,
-    "Uid" => $uid,
-    "PWD" => $pass,
-    "TrustServerCertificate" => true
-];
-
-// Establish the connection
-$conn = sqlsrv_connect($servername, $connection);
-
-// Check the connection
-if (!$conn) {
-    die(print_r(sqlsrv_errors(), true));
-}
-
-// Handle Delete Product
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['deleteProduct'])) {
-    $productID = $_POST['productID'];
-
-    // Delete product from the database
-    $sqlDelete = "DELETE FROM products WHERE uniqueID = ?";
-    $params = [$productID];
-    $stmtDelete = sqlsrv_query($conn, $sqlDelete, $params);
-
-    if ($stmtDelete === false) {
-        die(print_r(sqlsrv_errors(), true));
-    }
-
-    echo "Product deleted successfully!";
-}
-
-// Fetch products for the delete form dropdown
-$sql = "SELECT uniqueID, productName FROM products";
-$stmt = sqlsrv_query($conn, $sql);
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ecommerce Website - Manage Products</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
-        .container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        form { margin-top: 20px; background: #fff; padding: 20px; border-radius: 10px; width: 300px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select, button { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; }
-        button { background-color: #333; color: #fff; border: none; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <!-- Delete Product Form -->
-    <form action="" method="POST">
-        <label for="productID">Select Product</label>
-        <select id="productID" name="productID" required>
-            <option value="">Select Product</option>
-            <?php 
-            // Display products in dropdown
-            while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)): ?>
-                <option value="<?= $row['uniqueID'] ?>"><?= $row['productName'] ?></option>
-            <?php endwhile; ?>
-        </select>
-        <button type="submit" name="deleteProduct">Delete Product</button>
-    </form>
+    <!-- Delete Product Section -->
+    <div class="mb-6">
+        <h2 class="text-xl font-bold mb-2">Delete Product</h2>
+        <form action="" method="POST">
+            <select name="productID" required class="border p-2 w-full mb-4">
+                <option value="">Select Product</option>
+                <?php 
+                $productStmt = sqlsrv_query($conn, "SELECT uniqueID, productName FROM Products");
+                while ($row = sqlsrv_fetch_array($productStmt, SQLSRV_FETCH_ASSOC)) {
+                    echo "<option value='{$row['uniqueID']}'>{$row['productName']}</option>";
+                }
+                ?>
+            </select>
+            <button type="submit" name="deleteProduct" class="bg-red-500 text-white px-4 py-2 rounded">Delete Product</button>
+        </form>
+    </div>
 </div>
-
 </body>
 </html>
-
-<?php
-// Free resources and close connection
-sqlsrv_free_stmt($stmt);
-sqlsrv_close($conn);
-?>
-<nav class="navbar">
-<link rel="stylesheet" type="text/css" href="navbar.css" />
-    <a href="index.php" class="nav-logo">Ecommerce Store</a>
-    <ul class="nav-links">
-        <li><a href="about.php">About Us</a></li>
-        <li><a href="catalog.php">Products</a>
-        <li><a href="login.php">Login</a></li>
-        <li><a href="register.php">Register</a></li>
-    </ul>
-</nav>
