@@ -37,7 +37,7 @@ $connection = $connectionString->connection;
         </div>
         <div class="flex justify-between items-center mb-2">
           <p class="text-primaryTextColor">Tax</p>
-          <p class="font-semibold text-primaryTextColor">$5.00</p>
+          <p class="font-semibold text-primaryTextColor">15%</p>
         </div>
         <div class="flex justify-between items-center border-t pt-4 mt-4">
           <p class="font-bold text-lg text-primaryTextColor">Total</p>
@@ -48,9 +48,9 @@ $connection = $connectionString->connection;
         </button>
       </div>
     </div>
-    <div id="checkoutModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div id="paymentMethodsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
         <div class="bg-bgColor p-6 rounded-lg w-96  border border-solid border-white">
-            <h2 class="text-2xl font-bold mb-4 text-primaryTextColor">Checkout</h2>
+            <h2 class="text-2xl font-bold mb-4 text-primaryTextColor">Select a Payment Method</h2>
             <div class="mb-4">
                 <label for="paymentMethodSelect" class="block text-lg text-primaryTextColor">Payment Method</label>
                 <select id="paymentMethodSelect" class="w-full border rounded-md py-2 px-3">
@@ -62,7 +62,8 @@ $connection = $connectionString->connection;
 
                     while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
                         $maskedCard = substr($row['cardNumber'], 0, 4) . " **** **** " . substr($row['cardNumber'], -4);
-                        echo "<option value='{$row['uniqueID']}'>Card ending in {$maskedCard} (Expires {$row['expiryDate']})</option>";
+                        $changed = $row['expiryDate']->format('M-Y');  // DateTime::createFromFormat('Y-m',(String)$row['expiryDate'] );
+                        echo "<option value='{$row['uniqueID']}'>Card ending in {$maskedCard} (Expires {$changed} )</option>";
                     }
                     ?>
                 </select>
@@ -82,21 +83,61 @@ $connection = $connectionString->connection;
 
             <div class="flex justify-end mt-4 space-x-2">
                 <button id="closeModalBtn" class="bg-gray-500 text-white px-4 py-2 rounded-md">Cancel</button>
-                <button id="checkoutBtn" class="bg-btnPrimary text-white px-4 py-2 rounded-md">Proceed</button>
+                <button id="selectPaymentMethodBtn" class="bg-btnPrimary text-white px-4 py-2 rounded-md">Proceed</button>
             </div>
         </div>
     </div>
+    <div id="makePaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-bgColor p-6 rounded-lg w-96 border border-solid border-white">
+        <h2 class="text-2xl font-bold mb-4 text-primaryTextColor">Checkout</h2>
+
+        <div class="flex justify-between items-center border-t pt-4 mt-4">
+          <p class="font-bold text-lg text-primaryTextColor">Total Items Qty</p>
+          <p class="font-bold text-lg text-primaryTextColor"id="totalItems">0</p>
+        </div>
+        <div class="flex justify-between items-center border-t pt-4 mt-4">
+          <p class="font-bold text-lg text-primaryTextColor">TotalCost </p>
+          <p class="font-bold text-lg text-primaryTextColor" id="totalCost">$0.00</p>
+        </div>
+        <div class="flex justify-between items-center border-t pt-4 mt-4">
+          <p class="font-bold text-lg text-primaryTextColor">Payment Method </p>
+          <p class="font-bold text-lg text-primaryTextColor" id="paymentMethodCard"></p>'
+          <input type="hidden" id="paymentMethods">
+        </div>
+
+
+
+        <!-- New Card Details Section -->
+        <div id="newCardFields" class="space-y-4 hidden">
+            <label for="cardNumber" class="block text-sm font-medium text-primaryTextColor">Card Number</label>
+            <input type="text" id="cardNumber" class="w-full border rounded-md py-2 px-3" placeholder="Enter Card Number" maxlength="16">
+
+            <label for="expiryDate" class="block text-sm font-medium text-primaryTextColor">Expiry Date</label>
+            <input type="month" id="expiryDate" class="w-full border rounded-md py-2 px-3">
+
+            <label for="cvv" class="block text-sm font-medium text-primaryTextColor">CVV</label>
+            <input type="text" id="cvv" class="w-full border rounded-md py-2 px-3" placeholder="Enter CVV" maxlength="4">
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end mt-4 space-x-2">
+            <button id="closeModalBtn" class="bg-gray-500 text-white px-4 py-2 rounded-md">Cancel</button>
+            <button id="confirmPaymentBtn" class="bg-btnPrimary text-white px-4 py-2 rounded-md">Confirm</button>
+        </div>
+    </div>
+</div>
   </main>
   <script>
+        var cardData = {};
     document.addEventListener('DOMContentLoaded', loadCartItems);
  // Show the checkout modal when the button is clicked
  document.getElementById('proceedToCheckoutBtn').addEventListener('click', function () {
-            document.getElementById('checkoutModal').classList.remove('hidden');
+            document.getElementById('paymentMethodsModal').classList.remove('hidden');
         });
 
         // Close the modal when the cancel button is clicked
         document.getElementById('closeModalBtn').addEventListener('click', function () {
-            document.getElementById('checkoutModal').classList.add('hidden');
+            document.getElementById('paymentMethodsModal').classList.add('hidden');
         });
 
         // Toggle between using a new card or saved card
@@ -110,28 +151,42 @@ $connection = $connectionString->connection;
         });
 
         // Handle checkout form submission
-        document.getElementById('checkoutBtn').addEventListener('click', async function () {
+        document.getElementById('selectPaymentMethodBtn').addEventListener('click', async function () {
             const paymentMethod = document.getElementById('paymentMethodSelect').value;
-            let cardData = {};
-
+        
+            let cartItems =[]; 
             if (paymentMethod === 'new') {
                 cardData.cardNumber = document.getElementById('cardNumber').value;
                 cardData.expiryDate = document.getElementById('expiryDate').value;
                 cardData.cvv = document.getElementById('cvv').value;
+                await addPaymentMethod(cardData);
             } else {
-                cardData.paymentMethodID = paymentMethod;
-            }
 
-            // Send the data to the server for processing the checkout
-            const response = await fetch('../../data/processes/checkoutProcess.php', {
+                cardData.paymentMethodID = paymentMethod;
+                cardData.paymentCard = paymentMethod
+            }
+            console.log(cardData.paymentCard)
+            document.getElementById('makePaymentModal').classList.remove('hidden');
+            document.getElementById('paymentMethodsModal').classList.add('hidden');
+            document.getElementById('paymentMethods').value = cardData.paymentMethodID;
+            document.getElementById('paymentMethodCard').value =cardData.paymentCard;
+           
+        });
+        async function addPaymentMethod(cardData= {}){
+          const paymentResponse = await fetch('../../data/processes/processPaymentMethods.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(cardData)
-            });
-
-            const result = await response.json();
+                body: JSON.stringify(cardData)});
+          if(paymentResponse.ok){
+            let data =paymentResponse.json();
+            cardData.paymentMethodID = paymentResponse.paymentMethodID;
+            cardData.paymentCard =paymentResponse.paymentCard;
+          }
+        }
+        async function checkOut(){
+          const result = await response.json();
             if (result.success) {
                 alert('Checkout successful!');
                 window.location.href = 'orderConfirmation.php'; // Redirect to order confirmation page
@@ -141,7 +196,7 @@ $connection = $connectionString->connection;
 
             // Close the modal after processing
             document.getElementById('checkoutModal').classList.add('hidden');
-        });
+        }
 async function loadCartItems() {
   try {
     const response = await fetch('../../data/processes/processCart.php?method=GET');
@@ -153,7 +208,7 @@ async function loadCartItems() {
     cartItemsContainer.innerHTML = ''; // Clear existing content
 
     if (data.length === 0) {
-      cartItemsContainer.innerHTML = '<p class="text-center  mb-6 text-primaryTextColor">Your cart is empty.</p>';
+      cartItemsContainer.innerHTML = '<p class="text-center text-2xl mb-6 text-primaryTextColor">Your cart is empty.</p>';
       return;
     }
 
