@@ -31,7 +31,7 @@ if (!is_dir($uploadDir)) {
 
 // Handle Add Category
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['addCategory'])) {
-    $categoryType = $_POST['type'];
+    $categoryType = $_POST['categoryType'];
 
     $sql = "INSERT INTO Categories (type) VALUES (?)";
     $params = [$categoryType];

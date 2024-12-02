@@ -13,34 +13,38 @@ $connection = [
     "Uid" => $uid,
     "PWD" => $pass,
 ];
+try {
+    // Establish the connection
+    $conn = sqlsrv_connect($servername, $connection);
 
-$conn = sqlsrv_connect($servername, $connection);
+    // Check the connection
+    if (!$conn) {
+        echo "<script>alert('Failed to connect');</script>";
+    }
 
-if (!$conn) {
-    die("<script>alert('Failed to connect');</script>");
-}
+    // Default query to fetch all products with category type
+    $sql = "
+        SELECT p.uniqueID, p.productName, p.productCost, p.productQuantity, p.CategoryID, c.type AS CategoryType
+        FROM products p
+        JOIN Categories c ON p.CategoryID = c.uniqueID
+    ";
 
-// Fetch categories for the sidebar
-$categoriesQuery = "SELECT uniqueID, type FROM Categories";
-$categoriesStmt = sqlsrv_query($conn, $categoriesQuery);
+    // Check if a category type has been passed via the search form
+    if (isset($_GET['categoryType']) && !empty($_GET['categoryType'])) {
+        $categoryType = $_GET['categoryType'];  // Get the category type from the form
+        $sql .= " WHERE c.type LIKE ?";
+        $params = ['%' . $categoryType . '%'];  // Use LIKE for partial matching
+    } else {
+        $params = [];
+    }
 
-if ($categoriesStmt === false) {
-    die(print_r(sqlsrv_errors(), true));
-}
+    // Prepare the statement
+    $stmt = sqlsrv_query($conn, $sql, $params);
 
-// Default query to fetch all products
-$sql = "SELECT uniqueID, productName, productImage, productCost, productQuantity, CategoryID FROM Products";
-
-$params = [];
-if (isset($_GET['categoryID']) && !empty($_GET['categoryID'])) {
-    $categoryID = intval($_GET['categoryID']);
-    $sql .= " WHERE CategoryID = ?";
-    $params = [$categoryID];
-}
-
-// Fetch products
-$stmt = sqlsrv_query($conn, $sql, $params);
-if ($stmt === false) {
+    if ($stmt === false) {
+        die(print_r(sqlsrv_errors(), true));
+    }
+} catch (Exception $e) {
     die(print_r(sqlsrv_errors(), true));
 }
 ?>
@@ -50,54 +54,181 @@ if ($stmt === false) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ecommerce Store</title>
+    <title>Ecommerce Website</title>
     <link href="../../public/css/tailwind.css" rel="stylesheet">
+    <style>
+        /* General page layout */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        /* Search bar style */
+        .search-container {
+            text-align: center;
+            margin: 20px;
+        }
+
+        .search-container input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 200px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .search-container button {
+            padding: 10px 15px;
+            background-color: #e91e63;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .search-container button:hover {
+            background-color: #c2185b;
+        }
+
+        /* Product container */
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Product card style */
+        .product-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            width: 250px;
+            margin: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+        }
+
+        /* Product image */
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px 10px 0 0;
+        }
+
+        /* Product info section */
+        .product-info {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .product-info h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .product-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .product-info .price {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e91e63;
+        }
+
+        .buy-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 15px;
+            background: #e91e63;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .buy-btn:hover {
+            background: #c2185b;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
+<body>
 <?php include __DIR__ . '../../components/navbar.php'; ?>
+<header>
+    <h1>Welcome to Our Ecommerce Store</h1>
+</header>
 
-<div class="flex">
-    <!-- Sidebar -->
-    <aside class="w-1/4 bg-white p-4 shadow-md">
-        <h2 class="text-lg font-semibold mb-4">Filter by Category</h2>
-        <form method="GET" action="">
-            <ul>
-                <?php while ($cat = sqlsrv_fetch_array($categoriesStmt, SQLSRV_FETCH_ASSOC)): ?>
-                    <li>
-                        <button type="submit" name="categoryID" value="<?= $cat['uniqueID'] ?>" 
-                            class="block py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-md text-left w-full">
-                            <?= htmlspecialchars($cat['type']) ?>
-                        </button>
-                    </li>
-                <?php endwhile; ?>
-            </ul>
-        </form>
-    </aside>
+<!-- Search Bar -->
+<div class="search-container">
+    <form method="GET" action="">
+        <input type="text" name="categoryType" placeholder="Enter Category Type" value="<?php echo isset($_GET['categoryType']) ? htmlspecialchars($_GET['categoryType']) : ''; ?>">
+        <button type="submit">Search</button>
+    </form>
+</div>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <?php while ($product = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)): ?>
-                <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                    <img src="<?php echo $product['productImage']; ?>" 
-                        alt="<?= htmlspecialchars($product['productName']) ?>" 
-                        class="w-full h-48 object-cover">
-                    <div class="p-4">   
-                        <h3 class="text-lg font-semibold"><?= htmlspecialchars($product['productName']) ?></h3>
-                        <p class="text-gray-600">Price: $<?= number_format($product['productCost'], 2) ?></p>
-                        <p class="text-gray-600">Quantity: <?= $product['productQuantity'] ?></p>
-                        <form method="POST" action="addToCart.php" class="mt-4">
-                            <input type="hidden" name="productID" value="<?= $product['uniqueID'] ?>">
-                            <button type="submit" 
-                                class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">
-                                Add to Cart
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            <?php endwhile; ?>
-        </div>
-    </main>
+<div class="container">
+    <?php
+    if (!$conn) {
+        echo 'No Connection was Made';
+    } else {
+        while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+            // Get the product name
+            $productName = strtolower(htmlspecialchars($row['productName']));
+
+            // Manually specify the image paths for each product
+            if ($productName == "cap") {
+                $imagePath = "images/cap.jfif";
+            } elseif ($productName == "hoodie") {
+                $imagePath = "images/hoodie.jfif";
+            } elseif ($productName == "jacket") {
+                $imagePath = "images/jacket.jfif";
+            } elseif ($productName == "jeans") {
+                $imagePath = "images/jeans.jfif";
+            } elseif ($productName == "sneakers") {
+                $imagePath = "images/sneakers.jfif";
+            } elseif ($productName == "t-shirt") {
+                $imagePath = "images/t-shirt.jfif";  // T-shirt image path
+            } else {
+                $imagePath = "images/default.jfif";  // Fallback image if product name doesn't match
+            }
+
+            // Display product card
+            echo '<div class="product-card">';
+            echo '<img src="' . $imagePath . '" alt="' . htmlspecialchars($row['productName']) . '">';
+            echo '<div class="product-info">';
+            echo '<h3>' . htmlspecialchars($row['productName']) . '</h3>';
+            echo '<p class="price">$' . htmlspecialchars($row['productCost']) . '</p>';
+            echo '<p>Quantity: ' . htmlspecialchars($row['productQuantity']) . '</p>';
+            echo '<p>Category: ' . htmlspecialchars($row['CategoryType']) . '</p>';
+            echo '<a href="#" class="buy-btn">Buy Now</a>';
+            echo '</div>';
+            echo '</div>';
+        }
+    }
+    ?>
 </div>
 
 </body>
@@ -105,7 +236,6 @@ if ($stmt === false) {
 
 <?php
 // Free resources and close connection
-sqlsrv_free_stmt($categoriesStmt);
 sqlsrv_free_stmt($stmt);
 sqlsrv_close($conn);
 ?>
