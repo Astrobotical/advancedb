@@ -24,7 +24,7 @@ $connection = $connectionString->connection;
   <main class="px-6 md:px-16 py-12 bg-bgColor h-screen">
     <div class="max-w-4xl mx-auto">
   <!-- Inside the `Cart Content` div -->
-   <div id="cartItems" class="space-y-4"></div>
+   <div id="cartItems" class="space-y-4 pb-4"></div>
         </div>
       </div>
 
@@ -33,7 +33,7 @@ $connection = $connectionString->connection;
         <h2 class="text-2xl font-bold mb-4 text-primaryTextColor">Order Summary</h2>
         <div class="flex justify-between items-center mb-2">
           <p class="text-primaryTextColor">Subtotal</p>
-          <p class="font-semibold text-primaryTextColor">$0.00</p>
+          <p class="font-semibold text-primaryTextColor" id="subtotal">$0.00</p>
         </div>
         <div class="flex justify-between items-center mb-2">
           <p class="text-primaryTextColor">Tax</p>
@@ -41,7 +41,7 @@ $connection = $connectionString->connection;
         </div>
         <div class="flex justify-between items-center border-t pt-4 mt-4">
           <p class="font-bold text-lg text-primaryTextColor">Total</p>
-          <p class="font-bold text-lg text-primaryTextColor">$0.00</p>
+          <p class="font-bold text-lg text-primaryTextColor" id="calculatedTotal">$0.00</p>
         </div>
         <button class="w-full mt-4 bg-btnPrimary text-white py-3 rounded-lg shadow hover:bg-teal-600" id="proceedToCheckoutBtn">
           Proceed to Checkout
@@ -129,6 +129,10 @@ $connection = $connectionString->connection;
   </main>
   <script>
         var cardData = {};
+        var cartTotal = 0;
+        var cartSubtotal = 0;
+        var cartLasttotal = 0;
+        var totalCartQty = 0;
     document.addEventListener('DOMContentLoaded', loadCartItems);
  // Show the checkout modal when the button is clicked
  document.getElementById('proceedToCheckoutBtn').addEventListener('click', function () {
@@ -141,6 +145,7 @@ $connection = $connectionString->connection;
         });
         document.getElementById('confirmPaymentCheckoutBtn').addEventListener('click', function () {
             document.getElementById('makePaymentModal').classList.add('hidden');
+            processOrder(); 
 
         });
         document.getElementById('closeModalCheckoutBtn').addEventListener('click', function () {
@@ -173,7 +178,7 @@ $connection = $connectionString->connection;
             //Show next modal
             document.getElementById('makePaymentModal').classList.remove('hidden');
               //console.log(paymentMethod.options[paymentMethod.selectedIndex].text);
-                cardData.paymentMethodID = paymentMethod;
+                cardData.paymentMethodID = paymentMethod.value;
                 cardData.paymentCard = paymentMethod.options[paymentMethod.selectedIndex].text;
                 
             }
@@ -181,7 +186,8 @@ $connection = $connectionString->connection;
        
             document.getElementById('paymentMethods').value = cardData.paymentMethodID;
             document.getElementById('paymentMethodCard').innerText =cardData.paymentCard;
-           
+           document.getElementById('totalItems').innerText = totalCartQty;
+           document.getElementById('totalCost').innerText = cartLasttotal;
         });
         async function addPaymentMethod() {
   try {
@@ -219,6 +225,11 @@ $connection = $connectionString->connection;
 }
 async function loadCartItems() {
   try {
+    cartSubtotal = 0;
+    cartLasttotal = 0;
+    totalCartQty = 0;
+    document.getElementById('subtotal').innerText = `$0`;
+    document.getElementById('calculatedTotal').innerText = `$0`;
     const response = await fetch('../../data/processes/processCart.php?method=GET');
     const data = await response.json();
 
@@ -233,47 +244,55 @@ async function loadCartItems() {
     }
 
     data.forEach((item) => {
+      cartSubtotal += item.quantity * item.productCost;
+      totalCartQty += item.quantity;
       const itemRow = document.createElement('div');
-      itemRow.className = 'flex items-center justify-between border-b pb-4';
-      itemRow.innerHTML = `
-        <div class="flex items-center space-x-4">
-          <img src="${item.productImage}" alt="${item.productName}" class="w-20 h-20 object-cover rounded-md">
-          <div>
-            <h3 class="font-semibold text-lg text-primaryTextColor">${item.productName}</h3>
-            <p class="text-primaryTextColor">${item.categoryType}</p>
-          </div>
-        </div>
-        <div class="flex items-center space-x-6">
-          <div>
-            <label for="quantity-${item.uniqueID}" class="text-sm font-medium text-primaryTextColor">Qty:</label>
-            <input 
-              type="number" 
-              id="quantity-${item.uniqueID}" 
-              value="${item.quantity}" 
-              class="w-16 border rounded-md text-center text-primaryTextColor"
-              onchange="updateQuantity(${item.uniqueID}, this.value)"
-            >
-          </div>
-          <p class="text-lg font-bold text-primaryTextColor">$${item.productCost}</p>
-          <button 
-            class="text-red-500 hover:text-red-700 font-semibold" 
-            onclick="deleteItem(${item.uniqueID})"
-          >
-            Remove
-          </button>
-        </div>
-      `;
+itemRow.innerHTML = `
+  <div class="flex items-center justify-between border border-solid rounded-lg p-4 p-6 bg-base-100 shadow-lg">
+    <div class="flex items-center space-x-4">
+      <img src="${item.productImage}" alt="${item.productName}" class="w-20 h-20 object-cover rounded-md">
+      <div>
+        <h3 class="font-semibold text-lg text-primaryTextColor">${item.productName}</h3>
+        <p class="text-primaryTextColor">${item.categoryType}</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-6">
+      <div>
+        <label for="quantity-${item.uniqueID}" class="text-sm font-medium text-primaryTextColor">Qty:</label>
+        <input 
+          type="number" 
+          id="quantity-${item.uniqueID}" 
+          value="${item.quantity}" 
+          min="1"
+          class="w-16 border rounded-md text-center text-primaryTextColor"
+          onchange="updateQuantity(${item.uniqueID}, this.value)"
+        >
+      </div>
+      <p class="text-lg font-bold text-primaryTextColor">$${item.productCost}</p>
+      <button 
+        class="text-red-500 hover:text-red-700 font-semibold" 
+        onclick="deleteItem(${item.uniqueID})"
+      >
+        Remove
+      </button>
+    </div>
+  </div>
+`;
       cartItemsContainer.appendChild(itemRow);
     });
+    cartLasttotal = (cartSubtotal* 0.15)+cartSubtotal;
+    document.getElementById('subtotal').innerText = `$${cartSubtotal}`;
+    document.getElementById('calculatedTotal').innerText = `$${cartLasttotal}`;
   } catch (error) {
     console.error('Error loading cart items:', error);
     document.getElementById('cartItems').innerHTML = '<p class="text-center text-gray-500">Error loading cart items.</p>';
   }
+  
 }
 
 async function updateQuantity(itemId, quantity) {
   try {
-    const response = await fetch('../../data/processes/cartActions.php?method=UPDATE', {
+    const response = await fetch('../../data/processes/processCart.php?method=UPDATE', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uniqueID: itemId, quantity: parseInt(quantity, 10) }),
@@ -283,6 +302,7 @@ async function updateQuantity(itemId, quantity) {
     if (!response.ok) throw new Error(data.error || 'Failed to update quantity.');
 
     alert('Quantity updated successfully.');
+    loadCartItems();
   } catch (error) {
     console.error('Error updating quantity:', error);
   }
@@ -290,7 +310,7 @@ async function updateQuantity(itemId, quantity) {
 
 async function deleteItem(itemId) {
   try {
-    const response = await fetch('../../data/processes/cartActions.php?method=DELETE', {
+    const response = await fetch('../../data/processes/processCart.php?method=DELETE', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uniqueID: itemId }),
@@ -298,12 +318,67 @@ async function deleteItem(itemId) {
     const data = await response.json();
 
     if (!response.ok) throw new Error(data.error || 'Failed to delete item.');
-
+    loadCartItems(); 
     alert('Item removed successfully.');
-    loadCartItems(); // Reload the cart
+    // Reload the cart
   } catch (error) {
     console.error('Error deleting item:', error);
   }
+}
+async function processOrder() {
+        const paymentMethodID = cardData.paymentMethodID; 
+        const totalCost = cartLasttotal; 
+if (!paymentMethodID) {
+    alert('Please select a payment method.');
+    return;
+}
+
+try {
+    // Send the payment method ID and total cost to the server
+    const response = await fetch('../../data/processes/processOrder.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            paymentMethodID,
+            totalCost,
+        }),
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+        if (result.success) {
+            alert(`Order placed successfully! Order ID: ${result.orderID}`);
+            // Optionally redirect to an order summary or confirmation page
+            window.location.reload();
+        } else {
+            alert(result.error || 'Failed to place order.');
+        }
+    } else {
+        alert('An unexpected error occurred. Please try again.');
+    }
+} catch (error) {
+    console.error('Error processing order:', error);
+    alert('Failed to process your order. Please try again.');
+}
+    }
+async function clearCart() {
+    try {
+        const response = await fetch('../../data/processes/processCart.php?method=CLEAR', {
+            method: 'POST',
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error || 'Failed to clear cart.');
+
+        // Reload the cart view to show the empty cart
+        loadCartItems();
+    } catch (error) {
+        console.error('Error clearing the cart:', error);
+        alert('There was an error clearing your cart.');
+    }
 }
 
   </script>

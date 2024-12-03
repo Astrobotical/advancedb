@@ -31,13 +31,30 @@ $userRole = $_SESSION['userRole'] ?? null;
         <li><a href="/index.php" class="text-primaryTextColor hover:hover:bg-grey-500">Welcome Page</a></li>
         <li><a href="./pages/aboutus.php" class="text-primaryTextColor hover:hover:bg-grey-500">About Us</a></li>
         <li><a href="./pages/products.php" class="text-primaryTextColor hover:hover:bg-grey-500">Products</a></li>
-        <li>
-          <a class="text-sky-400 font-bold">Account</a>
-          <ul class="p-2">
-            <li><a class="text-primaryTextColor" href="/advancedb/pages/admin/products.php">Products</a></li>
-            <li><a class="text-primaryTextColor">Settings</a></li>
-          </ul>
-        </li>
+        <?php if (isset($userIsLoggedIn)) { ?>
+          <li class="z-50">
+            <details>
+              <summary class="text-primaryTextColor hover:hover:bg-grey-500">Account</summary>
+              <ul class="p-2 w-max">
+                <?php if (isset($userRole) && $userRole == 'Admin') { ?>
+                  <li>
+                    <details open>
+                      <summary class="text-btnPrimary hover:hover:bg-grey-500">Admin Pages</summary>
+                      <ul>
+                        <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/admin/listUsers.php">Users Management</a></li>
+                        <li><a class="text-primaryTextColor" href="/pages/admin/productsmodificationpage.php">Edit Products</a></li>
+                      </ul>
+                    </details>
+                  </li>
+                <?php } ?>
+                <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/orderDetails.php">Order Details</a></li>
+                <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/profileSettings.php">Profile Settings</a></li>
+
+              </ul>
+            </details>
+          </li>
+        <?php } ?>
+        <li> <a href="/pages/myCart.php" class="text-primaryTextColor hover:hover:bg-grey-500">Cart<?php ?></a>
       </ul>
     </div>
     <a class="btn btn-ghost text-xl text-primaryTextColor" href="/index.php">EcommerceJA</a>
@@ -49,28 +66,28 @@ $userRole = $_SESSION['userRole'] ?? null;
       <li><a href="/index.php" class="text-primaryTextColor hover:hover:bg-grey-500">Welcome Page</a></li>
       <li><a href="/pages/aboutus.php" class="text-primaryTextColor hover:hover:bg-grey-500">About Us</a></li>
       <li><a href="/pages/products.php" class="text-primaryTextColor hover:hover:bg-grey-500">Products</a></li>
-      <?php if(isset($userIsLoggedIn)){ ?>
-      <li class="z-50"> 
-        <details>
-          <summary class="text-primaryTextColor hover:hover:bg-grey-500" >Account</summary>
-          <ul class="p-2 w-max">
-            <?php if(isset($userRole) && $userRole == 'Admin'){ ?>
-          <li>
-          <details open>
-            <summary class="text-btnPrimary hover:hover:bg-grey-500" >Admin Pages</summary>
-            <ul>
-            <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/admin/listUsers.php">Users Management</a></li>
-            <li><a class="text-primaryTextColor" href="/pages/admin/productsmodificationpage.php">Edit Products</a></li>
+      <?php if (isset($userIsLoggedIn)) { ?>
+        <li class="z-50">
+          <details>
+            <summary class="text-primaryTextColor hover:hover:bg-grey-500">Account</summary>
+            <ul class="p-2 w-max">
+              <?php if (isset($userRole) && $userRole == 'Admin') { ?>
+                <li>
+                  <details open>
+                    <summary class="text-btnPrimary hover:hover:bg-grey-500">Admin Pages</summary>
+                    <ul>
+                      <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/admin/listUsers.php">Users Management</a></li>
+                      <li><a class="text-primaryTextColor" href="/pages/admin/productsmodificationpage.php">Edit Products</a></li>
+                    </ul>
+                  </details>
+                </li>
+              <?php } ?>
+              <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/orderDetails.php">Order Details</a></li>
+              <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/profileSettings.php">Profile Settings</a></li>
+
             </ul>
           </details>
         </li>
-        <?php }?>
-            <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/orderDetails.php">Order Details</a></li>
-            <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/profileSettings.php">Profile Settings</a></li>
-
-          </ul>
-        </details>
-      </li>
       <?php } ?>
       <li> <a href="/pages/myCart.php" class="text-primaryTextColor hover:hover:bg-grey-500">Cart<?php ?></a>
 
@@ -106,7 +123,7 @@ $userRole = $_SESSION['userRole'] ?? null;
       </div>
     </div>
 -->
-        </li>
+      </li>
     </ul>
   </div>
   <div class="navbar-end">
@@ -127,7 +144,7 @@ $userRole = $_SESSION['userRole'] ?? null;
     </svg>
   </label>
 -->
-    <a class="btn bg-btnPrimary text-white" href="<?php echo ($userIsLoggedIn == null) ? '/pages/auth/login.php' : '/pages/auth/logout.php'; ?>" >
+    <a class="btn bg-btnPrimary text-white" href="<?php echo ($userIsLoggedIn == null) ? '/pages/auth/login.php' : '/pages/auth/logout.php'; ?>">
       <?php echo ($userIsLoggedIn == null) ? 'Login' : 'Logout'; ?>
     </a>
   </div>

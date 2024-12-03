@@ -4,13 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Users Management</title>
-  <link href="../../public/css/tailwind.css" rel="stylesheet">         
+  <link href="../../public/css/tailwind.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>         
 </head>
 <body class="bg-bgColor text-gray-800 font-sans h-screen">
 <?php include '../../components/navbar.php';?>
   <!-- Header -->
   <header class="bg-bgColor text-primaryColor py-3">
-    <h1 class="text-center text-3xl font-bold">Users Management</h1>
+    <h1 class="text-center  text-primaryTextColor text-3xl font-bold">Users Management</h1>
   </header>
   <!-- Main Content -->
   <main class="px-6 md:px-16 py-5 max-h-screen">
@@ -38,20 +39,20 @@
 
   <!-- Edit Modal -->
   <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-      <h2 class="text-2xl font-bold mb-4">Edit User</h2>
+    <div class="bg-base-100 p-6 rounded-lg shadow-lg max-w-md w-full">
+      <h2 class="text-2xl font-bold mb-4 text-primaryTextColor">Edit User</h2>
       <form id="editForm">
         <div class="mb-4">
-          <label for="editFirstName" class="block text-sm font-medium">First Name</label>
-          <input type="text" id="editFirstName" name="first_name" class="input input-bordered w-full" required>
+          <label for="editFirstName" class="block text-sm font-medium text-primaryTextColor ">First Name</label>
+          <input type="text" id="editFirstName" name="first_name" class="input input-bordered w-full text-primaryTextColor" required>
         </div>
         <div class="mb-4">
-          <label for="editLastName" class="block text-sm font-medium">Last Name</label>
-          <input type="text" id="editLastName" name="last_name" class="input input-bordered w-full" required>
+          <label for="editLastName" class="block text-sm font-medium text-primaryTextColor">Last Name</label>
+          <input type="text" id="editLastName" name="last_name" class="input input-bordered w-full text-primaryTextColor" required>
         </div>
         <div class="mb-4">
-        <label for="editRole" class="block text-sm font-medium">Role</label>
-        <select id="editRole" name="role" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
+        <label for="editRole" class="block text-sm font-medium text-primaryTextColor">Role</label>
+        <select id="editRole" name="role" class="mt-1 block w-full text-primaryTextColor px-3 py-2 border border-gray-300 bg-base-100 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
           <option value="0" class="pl-2">Select a Role if Empty</option>
           <option value="1" class="pl-2">Admin</option>
           <option value="2" class="pl-2">Customer</option>
@@ -59,8 +60,8 @@
         </div>
         <input type="hidden" id="editUserId" name="user_id">
         <div class="flex justify-end space-x-2">
-          <button type="button" id="cancelEdit" class="btn btn-outline">Cancel</button>
-          <button type="submit"  class="btn btn-primary">Update Changes</button>
+          <button type="button" id="cancelEdit" class="btn btn-outline text-primaryTextColor">Cancel</button>
+          <button type="submit"  class="btn text-white btn-primary">Update Changes</button>
         </div>
       </form>
     </div>
@@ -144,22 +145,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     editForm.addEventListener('submit', async function  (event) {
       event.preventDefault(); 
-      console.log('Update Clicked 23')
       var userID =  document.getElementById('editUserId');
       var FirstName = document.getElementById('editFirstName');
       var LastName =  document.getElementById('editLastName');
       var Role=  document.getElementById('editRole');
-      console.log('Update Clicked')
       try {
         const response = await fetch('../../data/processes/processUsers.php', {
           method: 'PUT',headers: {'Content-Type': 'application/json',},
       body: JSON.stringify({uniqueID:userID.value,RoleID:Role.value,firstName:FirstName.value,lastName:LastName.value}),
     });
     const result = await response.json();
+    if(result.success != null){
+      Swal.fire({title: 'User Account Updated'});
+      closeEditModal();
+      loadUserData();
+      location.reload() 
+    }
     if (response.ok) {
       alert('User updated successfully!');
-      closeEditModal();
-      loadUserData(); // Reload user data
     } else {
       alert(`Error: ${result.error}`);
     }} catch (error) {
@@ -181,8 +184,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const result = await response.json();
     if (response.ok) {
+      Swal.fire({title: 'User Account Has been deleted'});
       alert('User wad deleted successfully!');
       loadUserData(); 
+      location.reload() 
     } else {
       alert(`Error: ${result.error}`);
     }} catch (error) {
