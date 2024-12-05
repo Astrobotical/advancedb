@@ -1,0 +1,6 @@
+uniqueID,productName,productCost,CategoryID,productQuantity,productImage
+0,Wireless Mouse,899.99,1,250,/productsImage/placeholderimg.webp
+0,Gaming Keyboard,2999.00,2,150,/productsImage/placeholderimg.webp
+0,Bluetooth Speaker,1299.50,3,180,/productsImage/placeholderimg.webp
+0,Smartphone,15999.00,4,120,/productsImage/placeholderimg.webp
+0,Laptop,59999.99,5,75,/productsImage/placeholderimg.webp

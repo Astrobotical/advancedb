@@ -125,9 +125,9 @@ session_start();
 </style>
 </head>
 
-<body class="bg-white">
+<body class="bg-bgColor">
     <?php include __DIR__.'../../../components/navbar.php';?>
-    <div class="login-container" class="mt-7 max-w-lg mx-auto bg-gray-600">
+    <div class="login-container" class="mt-7 max-w-lg mx-auto bg-base-100">
         <div id="loginForm" class="mt-7 ">
             <h2 class="text-primaryTextColor text-3xl">Login</h2>
             <div class="form-group">

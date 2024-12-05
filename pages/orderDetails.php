@@ -1,3 +1,17 @@
+<?php 
+
+session_start(); // Start the session
+
+if (!isset($_SESSION['userID'])) {
+    // Respond with an unauthorized message
+    echo "<script>alert('Unauthorized access Please Login. Redirecting to the homepage.');</script>";
+    
+    // Redirect to the index page
+    echo "<script>window.location.href = '/index.php';</script>";
+    exit(); // Stop further script execution
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

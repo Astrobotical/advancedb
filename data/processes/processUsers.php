@@ -19,14 +19,13 @@ switch ($method) {
         deleteUser($connectionString->connection);
         break;
     default:
-        http_response_code(405); // Method Not Allowed
+        http_response_code(405); 
         header('Content-Type: application/json');
         echo json_encode(["error" => "Unsupported HTTP method"]);
         break;
 }
 
-sqlsrv_close($connectionString->connection); // Close the connection
-
+sqlsrv_close($connectionString->connection);
 
 function fetchUsers($connection) {
     header('Content-Type: application/json');
@@ -53,7 +52,7 @@ function addUser($connection) {
     $input = json_decode(file_get_contents('php://input'), true);
 
     if (!isset($input['username'], $input['firstName'], $input['lastName'], $input['address'], $input['DOB'], $input['RoleID'], $input['Password'], $input['email'])) {
-        http_response_code(400); // Bad Request
+        http_response_code(400); 
         echo json_encode(["error" => "Missing required fields"]);
         return;
     }
@@ -86,51 +85,72 @@ function addUser($connection) {
 
 
 function updateUser($connection) {
-     // Decode the input data
-     $input = json_decode(file_get_contents('php://input'), true);
+    $input = json_decode(file_get_contents('php://input'), true);
 
-     // Check for invalid JSON
-     if ($input === null) {
-         http_response_code(400); // Bad Request
-         echo json_encode(["error" => "Invalid JSON input"]);
-         return;
-     }
- 
-     // Validate input fields
-     if (!isset($input['firstName'], $input['lastName'], $input['RoleID'], $input['uniqueID'])) {
-         http_response_code(400); // Bad Request
-         echo json_encode(["error" => "Missing required fields"]);
-         return;
-     }
-     $RoleID = (int)$input['RoleID'];
-     $sql = "UPDATE Users SET firstName = ?, lastName = ?, RoleID = ? WHERE uniqueID = ?";
-     $params = [
-         $input['firstName'],
-         $input['lastName'],
-         $RoleID,
-         $input['uniqueID']
-     ];
- 
+    if ($input === null) {
+        http_response_code(400);
+        echo json_encode(["error" => "Invalid JSON input"]);
+        return;
+    }
+
+
+
+    $commit = $input['commit'];
+
+    if ($commit <= 0) {
+        // Rollback scenario for non-positive commit value
+        sqlsrv_begin_transaction($connection); // Start the transaction, though rollback is inevitable
+        sqlsrv_rollback($connection);
+        echo json_encode(["success" => false, "message" => "Commit value not positive, changes were not applied"]);
+        return;
+    }
+
+    $sql = "UPDATE Users SET firstName = ?, lastName = ?, username = ?, email = ?, address = ?, DOB = ?, RoleID = ? WHERE uniqueID = ?";
+    $params = [
+        $input['firstName'],
+        $input['lastName'],
+        $input['username'],
+        $input['email'],
+        $input['address'],
+        $input['DOB'],
+        $input['RoleID'],
+        $input['uniqueID']
+    ];
+
+    if (!empty($input['Password'])) {
+        $sql = "UPDATE Users SET firstName = ?, lastName = ?, username = ?, email = ?, address = ?, DOB = ?, RoleID = ?, Password = ? WHERE uniqueID = ?";
+        $params = [
+            $input['firstName'],
+            $input['lastName'],
+            $input['username'],
+            $input['email'],
+            $input['address'],
+            $input['DOB'],
+            $input['RoleID'],
+            password_hash($input['Password'], PASSWORD_DEFAULT),
+            $input['uniqueID']
+        ];
+    }
+
     sqlsrv_begin_transaction($connection); // Start a transaction
     $stmt = sqlsrv_query($connection, $sql, $params);
 
     if ($stmt === false) {
         sqlsrv_rollback($connection); // Rollback on failure
-        echo json_encode(["error" => "Failed to update user", "details" => sqlsrv_errors()]);
+        echo json_encode(["success" => false, "message" => "Failed to update user", "details" => sqlsrv_errors()]);
         return;
     }
 
-    sqlsrv_commit($connection); // Commit on success
-    echo json_encode(["success" => "User updated successfully"]);
+    sqlsrv_commit($connection); 
+    echo json_encode(["success" => true, "message" => "User updated successfully"]);
 }
-
 
 function deleteUser($connection) {
     header('Content-Type: application/json');
     parse_str(file_get_contents('php://input'), $input);
 
     if (!isset($input['uniqueID'])) {
-        http_response_code(400); // Bad Request
+        http_response_code(400); 
         echo json_encode(["error" => "Missing uniqueID"]);
         return;
     }
@@ -138,16 +158,16 @@ function deleteUser($connection) {
     $sql = "DELETE FROM Users WHERE uniqueID = ?";
     $params = [$input['uniqueID']];
 
-    sqlsrv_begin_transaction($connection); // Start a transaction
+    sqlsrv_begin_transaction($connection); 
     $stmt = sqlsrv_query($connection, $sql, $params);
 
     if ($stmt === false) {
-        sqlsrv_rollback($connection); // Rollback on failure
+        sqlsrv_rollback($connection); 
         echo json_encode(["error" => "Failed to delete user", "details" => sqlsrv_errors()]);
         return;
     }
 
-    sqlsrv_commit($connection); // Commit on success
+    sqlsrv_commit($connection); 
     echo json_encode(["success" => "User deleted successfully"]);
 }
 ?>

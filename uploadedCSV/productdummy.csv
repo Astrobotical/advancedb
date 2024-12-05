@@ -1,0 +1,6 @@
+﻿productName,productCost,productImage,CategoryID,productQuantity
+Wireless Mouse,899.99,../../productsImage/wirelessmouse.jpg,1,250
+Gaming Keyboard,2999.00,../../productsImage/gamingkeyboard.jpg,2,150
+Bluetooth Speaker,1299.50,../../productsImage/bluetoothspeaker.jpg,3,180
+Smartphone,15999.00,../../productsImage/smartphone.jpg,4,120
+Laptop,59999.99,../../productsImage/laptop.jpg,5,75

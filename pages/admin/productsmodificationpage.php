@@ -175,26 +175,36 @@ while ($row = sqlsrv_fetch_array($productsStmt, SQLSRV_FETCH_ASSOC)) {
 <?php include '../../components/navbar.php'; ?>
 <div class="container mx-auto mt-10 p-4">
     <div class="flex">
-    <h1 class="text-2xl font-bold mb-6">Manage Products & Categories</h1>
-    <button type="button" class="px-4 ml-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
-      onclick="toggleModal(true)"> Bulk Insert Products </button>
+    <h1 class="text-2xl font-bold mb-6 text-primaryTextColor">Manage Products & Categories</h1>
+
+<div id="uploadStatus" class="text-center mt-4"></div>
+   <!-- <button type="button" class="px-4 ml-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
+      onclick="toggleModal(true)"> Bulk Insert Products </button> -->
+</div>
+<!-- Upload CSV -->
+<div class="mb-6">
+    <h2 class="text-xl font-bold mb-2 text-primaryTextColor">Upload CSV</h2>
+<form id="uploadCsvForm" method="POST" enctype="multipart/form-data" action="../../data/processes/processUploadCSVandUpload.php" class="flex flex-row  gap-4">
+    <input type="file" name="csvFile" accept=".csv" class="border border-gray-300 rounded p-2 text-primaryTextColor" required>
+    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 ml-3">Upload and Insert</button>
+</form>
 </div>
     <!-- Add Category Section -->
     <div class="mb-6">
-        <h2 class="text-xl font-bold mb-2">Add Category</h2>
+        <h2 class="text-xl font-bold mb-2 text-primaryTextColor">Add Category</h2>
         <form action="" method="POST">
-            <input type="text" name="categoryType" placeholder="Category Name" required class="border p-2 w-full mb-4">
-            <button type="submit" name="addCategory" class="bg-blue-500 text-white px-4 py-2 rounded">Add Category</button>
+            <input type="text" name="categoryType" placeholder="Category Name" required class="border p-2 w-full mb-4 text-primaryTextColor">
+            <button type="submit" name="addCategory" class="bg-blue-500 text-white px-4 py-2 rounded ">Add Category</button>
         </form>
     </div>
 
     <!-- Add Product Section -->
     <div class="mb-6">
-        <h2 class="text-xl font-bold mb-2">Add Product</h2>
+        <h2 class="text-xl font-bold mb-2 text-primaryTextColor">Add Product</h2>
         <form action="" method="POST" enctype="multipart/form-data">
-            <input type="text" name="productName" placeholder="Product Name" required class="border p-2 w-full mb-4">
-            <input type="number" step="0.01" name="productCost" placeholder="Product Cost" required class="border p-2 w-full mb-4">
-            <input type="number" name="productQuantity" placeholder="Product Quantity" required class="border p-2 w-full mb-4">
+            <input type="text" name="productName" placeholder="Product Name" required class="border p-2 w-full mb-4 text-primaryTextColor">
+            <input type="number" step="0.01" name="productCost" placeholder="Product Cost" required class="border p-2 w-full mb-4 text-primaryTextColor">
+            <input type="number" name="productQuantity" placeholder="Product Quantity" required class="border p-2 w-full mb-4 text-primaryTextColor">
             <select name="categoryID" required class="border p-2 w-full mb-4">
                 <option value="">Select Category</option>
                 <?php 
@@ -209,46 +219,68 @@ while ($row = sqlsrv_fetch_array($productsStmt, SQLSRV_FETCH_ASSOC)) {
         </form>
     </div>
 
-    <!-- Update Product Section -->
-    <div class="mb-6">
-        <h2 class="text-xl font-bold mb-2">Update Product</h2>
-        <form action="" method="POST" enctype="multipart/form-data">
-            <select name="productID" required class="border p-2 w-full mb-4">
-                <option value="">Select Product</option>
-                <?php 
-                $productStmt = sqlsrv_query($conn, "SELECT uniqueID, productName FROM Products");
-                while ($row = sqlsrv_fetch_array($productStmt, SQLSRV_FETCH_ASSOC)) {
-                    echo "<option value='{$row['uniqueID']}'>{$row['productName']}</option>";
-                }
-                ?>
-            </select>
-            <input type="text" name="productName" placeholder="Product Name" required class="border p-2 w-full mb-4">
-            <input type="number" step="0.01" name="productCost" placeholder="Product Cost" required class="border p-2 w-full mb-4">
-            <input type="number" name="productQuantity" placeholder="Product Quantity" required class="border p-2 w-full mb-4">
-            <select name="categoryID" required class="border p-2 w-full mb-4">
-                <option value="">Select Category</option>
-                <?php 
-                $categoryStmt = sqlsrv_query($conn, "SELECT uniqueID, type FROM Categories");
-                while ($row = sqlsrv_fetch_array($categoryStmt, SQLSRV_FETCH_ASSOC)) {
-                    echo "<option value='{$row['uniqueID']}'>{$row['type']}</option>";
-                }
-                ?>
-            </select>
-            <input type="file" name="productImage" accept="image/*" class="border p-2 w-full mb-4">
-            <button type="submit" name="updateProduct" class="bg-yellow-500 text-white px-4 py-2 rounded">Update Product</button>
-        </form>
-    </div>
+   <!-- Update Product Section -->
+<div class="mb-6">
+    <h2 class="text-xl font-bold mb-2 text-primaryTextColor">Update Product</h2>
+    <form action="" method="POST" enctype="multipart/form-data">
+        <select name="productID" id="productDropdown" required class="border p-2 w-full mb-4">
+            <option value="">Select Product</option>
+            <?php 
+            $productStmt = sqlsrv_query($conn, "SELECT uniqueID, productName FROM Products");
+            while ($row = sqlsrv_fetch_array($productStmt, SQLSRV_FETCH_ASSOC)) {
+                echo "<option value='{$row['uniqueID']}'>{$row['productName']}</option>";
+            }
+            ?>
+        </select>
+        <input 
+            type="text" 
+            name="productName" 
+            id="productName" 
+            placeholder="Product Name" 
+            required 
+            class="border p-2 w-full mb-4 text-primaryTextColor"
+        >
+        <input 
+            type="number" 
+            step="0.01" 
+            name="productCost" 
+            id="productCost" 
+            placeholder="Product Cost" 
+            required 
+            class="border p-2 w-full mb-4 text-primaryTextColor"
+        >
+        <input 
+            type="number" 
+            name="productQuantity" 
+            id="productQuantity" 
+            placeholder="Product Quantity" 
+            required 
+            class="border p-2 w-full mb-4 text-primaryTextColor"
+        >
+        <select name="categoryID" id="categoryID" required class="border p-2 w-full mb-4 text-primaryTextColor">
+            <option value="">Select Category</option>
+            <?php 
+            $categoryStmt = sqlsrv_query($conn, "SELECT uniqueID, type FROM Categories");
+            while ($row = sqlsrv_fetch_array($categoryStmt, SQLSRV_FETCH_ASSOC)) {
+                echo "<option value='{$row['uniqueID']}'>{$row['type']}</option>";
+            }
+            ?>
+        </select>
+        <input type="file" name="productImage" accept="image/*" class="border p-2 w-full mb-4">
+        <button type="submit" name="updateProduct" class="bg-yellow-500 text-white px-4 py-2 rounded">Update Product</button>
+    </form>
+</div>
 
     <!-- Delete Product Section -->
     <div class="mb-6">
-        <h2 class="text-xl font-bold mb-2">Delete Product</h2>
+        <h2 class="text-xl font-bold mb-2 text-primaryTextColor">Delete Product</h2>
         <form action="" method="POST">
             <select name="productID" required class="border p-2 w-full mb-4">
                 <option value="">Select Product</option>
                 <?php 
                 $productStmt = sqlsrv_query($conn, "SELECT uniqueID, productName FROM Products");
                 while ($row = sqlsrv_fetch_array($productStmt, SQLSRV_FETCH_ASSOC)) {
-                    echo "<option value='{$row['uniqueID']}'>{$row['productName']}</option>";
+                    echo "<option value='{$row['uniqueID']}' class='text-primaryTextColor'>{$row['productName']}</option>";
                 }
                 ?>
             </select>
@@ -298,7 +330,55 @@ while ($row = sqlsrv_fetch_array($productsStmt, SQLSRV_FETCH_ASSOC)) {
     let rowCount = 0; 
     let categories = []; // Categories fetched from the database
 
-// Fetch categories from the database when the page loads
+    document.getElementById('uploadCsvForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+        const uploadStatus = document.getElementById('uploadStatus');
+
+        try {
+            const response = await fetch(event.target.action, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                uploadStatus.textContent = 'CSV file uploaded and products inserted successfully.';
+                uploadStatus.style.color = 'green';
+            } else {
+                uploadStatus.textContent = 'Error: ' + result.error;
+                uploadStatus.style.color = 'red';
+            }
+        } catch (error) {
+            uploadStatus.textContent = 'An unexpected error occurred.';
+            uploadStatus.style.color = 'red';
+        }
+    });
+    document.getElementById('productDropdown').addEventListener('change', function() {
+        const productID = this.value;
+
+        if (productID) {
+
+            fetch(`../../data/processes/processProducts.php?productID=${productID}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        document.getElementById('productName').value = data.productName || '';
+                        document.getElementById('productCost').value = data.productCost || '';
+                        document.getElementById('productQuantity').value = data.productQuantity || '';
+                        document.getElementById('categoryID').value = data.categoryID || '';
+                    }
+                })
+                .catch(error => console.error('Error fetching product details:', error));
+        } else {
+            document.getElementById('productName').value = '';
+            document.getElementById('productCost').value = '';
+            document.getElementById('productQuantity').value = '';
+            document.getElementById('categoryID').value = '';
+        }
+    });
+
 async function fetchCategories() {
   try {
     const response = await fetch('../../data/processes/processExportCSV.php');

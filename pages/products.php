@@ -290,7 +290,12 @@ try {
                             <label for="Qty">Quantity:</label>
                             <input type="number" name="Qty" min="1" value="1" class="w-6" required>
                         </div>
-                        <button type="submit" name="submit" class="buy-btn">Add to Cart</button>
+                        <?php if(!isset($_SESSION['userID'])){?>
+                            <a href="/pages/auth/login.php" class="btn  btn-disabled mt-1" style="color:black;">Please Login</a>
+                        <?php } else {?>
+                            <button type="submit" name="submit" class="buy-btn">Add to Cart</button>
+                            <?php } ?>
+                        
                     </div>
                 </form>
                 <?php endforeach;

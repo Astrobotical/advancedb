@@ -43,6 +43,7 @@ $userRole = $_SESSION['userRole'] ?? null;
                       <ul>
                         <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/admin/listUsers.php">Users Management</a></li>
                         <li><a class="text-primaryTextColor" href="/pages/admin/productsmodificationpage.php">Edit Products</a></li>
+                        <li><a class="text-primaryTextColor" href="/pages/admin/logs.php">System Logs</a></li>
                       </ul>
                     </details>
                   </li>
@@ -78,6 +79,7 @@ $userRole = $_SESSION['userRole'] ?? null;
                     <ul>
                       <li class="text-primaryTextColor hover:hover:bg-grey-500"><a href="/pages/admin/listUsers.php">Users Management</a></li>
                       <li><a class="text-primaryTextColor" href="/pages/admin/productsmodificationpage.php">Edit Products</a></li>
+                      <li><a class="text-primaryTextColor" href="/pages/admin/logs.php">System Logs</a></li>
                     </ul>
                   </details>
                 </li>

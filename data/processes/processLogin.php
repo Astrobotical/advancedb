@@ -7,7 +7,6 @@ try {
     if (!isset($_POST['username']) || !isset($_POST['password'])) {
         throw new Exception("Username and password are required.");
     }
-
     $username = $_POST['username'];
     $password = $_POST['password'];
     $rememberMe = isset($_POST['rememberMe']) ? true : false;

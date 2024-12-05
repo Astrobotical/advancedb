@@ -10,16 +10,14 @@ if (!isset($_SESSION['userID'])) {
 }
 
 $customerID = $_SESSION['userID'];
-$method = $_SERVER['REQUEST_METHOD'];  // Get the HTTP method (POST, GET)
+$method = $_SERVER['REQUEST_METHOD']; 
 
 switch ($method) {
     case 'POST':
-        // Handle order creation
         handleCreateOrder();
         break;
 
     case 'GET':
-        // Handle retrieving order or other GET-related tasks (if applicable)
         handleGetOrder();
         break;
 
@@ -142,8 +140,6 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
             break;
         }
     }
-
-    // If the product is not already added, append it
     if (!$productExists) {
         $orders[$orderID]['items'][] = [
             'productID' => $row['productID'],
@@ -161,7 +157,6 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
 // Re-index the array to return a clean list of orders
 $response = array_values($orders);
 
-// Send the response as JSON
 echo json_encode($response);
 }
 
